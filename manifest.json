@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "Jira Task Plus",
+  "version": "1.0.0",
+  "description": "Bulk create Jira tasks from Story and Epic pages.",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "tabs",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "*://*.atlassian.net/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.atlassian.net/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Jira Task Plus — Right-click for options"
+  },
+  "options_ui": {
+    "page": "settings/options.html",
+    "open_in_tab": true
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["modal/modal.html", "modal/modal.js", "assets/styles.css", "assets/icon16.png"],
+      "matches": ["*://*.atlassian.net/*"]
+    }
+  ],
+  "icons": {
+    "16": "assets/icon16.png",
+    "48": "assets/icon48.png",
+    "128": "assets/icon128.png"
+  }
+}

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jira Task Plus</title>
+  <link href="../assets/styles.css" rel="stylesheet" />
+  <style>
+    body { font-size: 13px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .dropdown-list li { transition: background 0.1s; }
+    .labels-input-wrap { position: relative; }
+    .label-suggestions { z-index: 100; }
+
+    /* Tabs */
+    .tab-btn { padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; background: #f0f0f0; color: #555; transition: all 0.15s; }
+    .tab-btn.active { background: #3b5998; color: #fff; }
+    .tab-btn.soon { position: relative; }
+    .tab-btn.soon::after { content: 'Soon'; position: absolute; top: -6px; right: -6px; font-size: 9px; background: #f59e0b; color: #fff; padding: 1px 4px; border-radius: 8px; }
+
+    /* Context badges */
+    .ctx-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 20px; font-size: 12px; background: #f3f4f6; border: 1px solid #e5e7eb; }
+    .ctx-badge.hidden { display: none !important; }
+    .ctx-badge .icon { font-size: 10px; }
+    .ctx-loading { color: #9ca3af; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* Section header */
+    .section-header { background: linear-gradient(90deg, #eef2ff 0%, #f8fafc 100%); padding: 8px 16px; border-radius: 6px; margin-bottom: 8px; }
+    .section-header span { color: #4338ca; font-weight: 600; font-size: 13px; }
+
+    /* Task row */
+    .task-row { padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
+    .task-row:last-child { border-bottom: none; }
+    .task-row-main { display: flex; align-items: center; gap: 8px; }
+    .task-row-expanded { display: none; align-items: center; gap: 8px; margin-top: 6px; padding-left: 30px; }
+    .task-row.expanded .task-row-expanded { display: flex; }
+
+    /* Expand toggle */
+    .btn-expand { width: 22px; height: 22px; border: none; background: #f3f4f6; border-radius: 4px; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center; color: #6b7280; transition: all 0.15s; flex-shrink: 0; }
+    .btn-expand:hover { background: #e5e7eb; }
+    .task-row.expanded .btn-expand { background: #eef2ff; color: #4338ca; }
+
+    /* Inputs */
+    .field-input { border: 1px solid #e5e7eb; border-radius: 6px; padding: 7px 10px; font-size: 12px; outline: none; transition: border-color 0.15s; background: #fff; }
+    .field-input:focus { border-color: #6366f1; }
+    .field-input::placeholder { color: #9ca3af; }
+    .field-input[readonly] { background: #f9fafb; color: #6b7280; }
+
+    /* Select-style dropdown trigger */
+    .field-select { border: 1px solid #e5e7eb; border-radius: 6px; padding: 7px 10px; font-size: 12px; outline: none; background: #fff; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 24px; }
+    .field-select:focus { border-color: #6366f1; }
+
+    /* Footer */
+    .modal-footer { border-top: 1px solid #e5e7eb; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; background: #fafbfc; }
+    .btn-add-row { border: 1px solid #e5e7eb; border-radius: 6px; padding: 7px 14px; font-size: 12px; font-weight: 500; background: #fff; cursor: pointer; transition: all 0.15s; }
+    .btn-add-row:hover { background: #f9fafb; border-color: #d1d5db; }
+    .btn-cancel { border: none; background: none; padding: 7px 16px; font-size: 13px; color: #6b7280; cursor: pointer; font-weight: 500; }
+    .btn-cancel:hover { color: #374151; }
+    .btn-create-all { background: #3b5998; color: #fff; border: none; border-radius: 6px; padding: 9px 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+    .btn-create-all:hover:not(:disabled) { background: #2d4a7a; }
+    .btn-create-all:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Remove button */
+    .btn-remove-row { color: #ef4444; background: none; border: none; font-size: 16px; cursor: pointer; padding: 4px; line-height: 1; opacity: 0.5; transition: opacity 0.15s; flex-shrink: 0; }
+    .btn-remove-row:hover { opacity: 1; }
+
+    /* Dropdown list */
+    .dropdown-list { position: absolute; z-index: 50; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-height: 180px; overflow-y: auto; margin-top: 2px; }
+    .dropdown-list li { padding: 6px 12px; font-size: 12px; cursor: pointer; }
+    .dropdown-list li:hover { background: #f3f4f6; }
+
+    /* Labels */
+    .labels-input-wrap { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; padding: 4px 8px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fff; min-height: 32px; cursor: text; }
+    .labels-input-wrap:focus-within { border-color: #6366f1; }
+    .label-tag { display: inline-flex; align-items: center; gap: 2px; background: #e5e7eb; border-radius: 4px; padding: 2px 6px; font-size: 11px; }
+    .label-tag button { background: none; border: none; cursor: pointer; font-size: 12px; color: #6b7280; padding: 0; line-height: 1; }
+    .label-text-input { flex: 1; min-width: 80px; border: none; outline: none; font-size: 12px; background: transparent; }
+    .label-suggestions { position: absolute; z-index: 50; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-height: 120px; overflow-y: auto; margin-top: 2px; }
+    .label-suggestions li { padding: 5px 10px; font-size: 11px; cursor: pointer; }
+    .label-suggestions li:hover { background: #f3f4f6; }
+
+    /* Row status badges */
+    .task-row.row-created { background: #f0fdf4; border-radius: 6px; padding: 8px; opacity: 0.85; }
+    .task-row.row-created .task-row-main input,
+    .task-row.row-created .task-row-main .field-select { opacity: 0.6; }
+    .created-badge { display: inline-flex; align-items: center; gap: 3px; background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; border-radius: 12px; padding: 3px 10px; font-size: 11px; font-weight: 600; text-decoration: none; white-space: nowrap; margin-left: auto; transition: background 0.15s; }
+    .created-badge:hover { background: #bbf7d0; }
+    .task-row.row-error { background: #fef2f2; border-radius: 6px; padding: 8px; }
+    .error-badge { display: inline-flex; align-items: center; background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; border-radius: 12px; padding: 3px 10px; font-size: 11px; font-weight: 600; white-space: nowrap; margin-left: auto; cursor: help; }
+  </style>
+</head>
+<body class="bg-white min-h-screen flex flex-col">
+
+  <!-- Main Content (shown immediately) -->
+  <div id="main-content" class="flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <div class="px-6 pt-5 pb-4 border-b border-gray-100">
+      <div class="flex items-center justify-between">
+        <h1 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+          <span class="text-indigo-500">＋</span>
+          <span>Add Items to <span id="header-issue-key" class="ctx-loading">...</span></span>
+        </h1>
+        <div class="flex items-center gap-2">
+          <button class="tab-btn soon">Stories</button>
+          <button class="tab-btn active">Tasks</button>
+          <button class="tab-btn soon">Stories &amp; Tasks</button>
+        </div>
+        <button id="btn-close" class="text-gray-400 hover:text-gray-600 text-xl leading-none cursor-pointer p-1">×</button>
+      </div>
+    </div>
+
+    <!-- Context Bar -->
+    <div class="px-6 py-3 flex items-center gap-3 flex-wrap">
+      <span id="ctx-program" class="ctx-badge hidden"><span class="icon">📁</span> <span class="ctx-loading">Loading...</span></span>
+      <span id="ctx-epic" class="ctx-badge hidden"><span class="icon">⚡</span> <span class="ctx-loading">Loading...</span></span>
+      <span id="ctx-story" class="ctx-badge hidden"><span class="icon">📋</span> <span class="ctx-loading">Loading...</span></span>
+      <div id="epic-selection" class="hidden">
+        <div id="epic-dropdown" class="w-64"></div>
+      </div>
+      <div id="story-selection" class="hidden">
+        <div id="story-dropdown" class="w-64"></div>
+      </div>
+      <div id="board-dropdown" class="w-64"></div>
+    </div>
+
+    <!-- Tasks Section -->
+    <div class="flex-1 overflow-auto px-6 py-2">
+      <div class="section-header flex items-center gap-2">
+        <span>☑️ TASKS</span>
+      </div>
+      <div id="task-container"></div>
+      <button id="btn-add-row" class="btn-add-row mt-2">+ Add Row</button>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <div class="flex items-center gap-2">
+        <div class="dropdown dropdown-top">
+          <label tabindex="0" class="btn-add-row" style="cursor:pointer">Import</label>
+          <ul tabindex="0" class="dropdown-content menu shadow bg-white rounded-lg w-40 border border-gray-200 mb-1">
+            <li><button id="btn-import-csv" class="text-sm px-3 py-2 hover:bg-gray-50 w-full text-left">From CSV</button></li>
+            <li><button id="btn-sample-csv" class="text-sm px-3 py-2 hover:bg-gray-50 w-full text-left">Template</button></li>
+          </ul>
+        </div>
+        <input id="csv-file-input" type="file" accept=".csv" class="hidden" />
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="status-msg" class="text-sm text-gray-400"></span>
+        <button id="btn-cancel" class="btn-cancel">Cancel</button>
+        <button id="btn-create" class="btn-create-all" disabled>Create All</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="modal.js"></script>
+</body>
+</html>

@@ -36,29 +36,51 @@
 <body>
   <div class="container">
     <div class="hero">
-      <div class="version">v1.2.0</div>
+      <div class="version">v1.3.0</div>
       <h1>Jira Task Plus</h1>
-      <p>Bulk create Jira tasks from Epic & Story pages. Now with an Admin Panel, Analytics dashboard, and Confluence sync.</p>
+      <p>Bulk create Jira tasks from Epic & Story pages. Now with a floating Time Tracker and Tempo integration.</p>
     </div>
 
     <div class="section">
-      <h2><span class="icon">🚀</span> What's New in v1.2.0</h2>
+      <h2><span class="icon">🚀</span> What's New in v1.3.0</h2>
       <div class="card-grid">
         <div class="card">
-          <h3>Admin Panel <span class="badge-new">NEW</span></h3>
-          <p>Options page redesigned as a full admin panel with sidebar navigation and multiple sections.</p>
+          <h3>Floating Time Tracker <span class="badge-new">NEW</span></h3>
+          <p>A cute floating bubble on every page. Shows active task timer, expands to task list. Shadow DOM isolated — zero performance impact.</p>
         </div>
         <div class="card">
-          <h3>Analytics Dashboard <span class="badge-new">NEW</span></h3>
-          <p>Track total tasks created, bulk sessions, and time saved — all calculated automatically.</p>
+          <h3>Tempo Cloud Integration <span class="badge-new">NEW</span></h3>
+          <p>Log hours directly to Tempo via api.tempo.io/4. Stop timer → edit time & description → one-click log.</p>
         </div>
         <div class="card">
-          <h3>Confluence Sync <span class="badge-new">NEW</span></h3>
-          <p>Analytics auto-sync to a shared Confluence page. Each user gets their own row, identified by email.</p>
+          <h3>Configurable JQL Filter <span class="badge-new">NEW</span></h3>
+          <p>Set your own JQL to control which tasks appear in the tracker. Max 10 tasks shown.</p>
         </div>
         <div class="card">
-          <h3>Ops Tasks Disabled <span class="badge-changed">CHANGED</span></h3>
-          <p>Import Ops Tasks button temporarily disabled in the modal footer while feature is being reworked.</p>
+          <h3>Feature Flags <span class="badge-new">NEW</span></h3>
+          <p>Tracker is opt-in via Admin Panel toggle. Enable/disable without affecting core bulk-create functionality.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span class="icon">🎯</span> Tracker Widget States</h2>
+      <div class="card-grid">
+        <div class="card">
+          <h3>😴 Idle</h3>
+          <p>Tiny sleeping emoji pill in bottom-right corner. Click to expand task list.</p>
+        </div>
+        <div class="card">
+          <h3>🔴 Active Timer</h3>
+          <p>Shows red dot + issue key + live counter + stop button. Always visible while working.</p>
+        </div>
+        <div class="card">
+          <h3>📋 Task List</h3>
+          <p>Expandable panel with up to 10 tasks from your JQL filter. Click play to start tracking.</p>
+        </div>
+        <div class="card">
+          <h3>✨ Log Modal</h3>
+          <p>On stop: edit time spent, add description, then log to Tempo with one click.</p>
         </div>
       </div>
     </div>
@@ -121,19 +143,21 @@
       <h2><span class="icon">📝</span> Changelog</h2>
       <div class="changelog">
         <ul>
-          <li>Added admin panel with sidebar navigation (Org Configs + Analytics)</li>
-          <li>Added analytics dashboard with task count, time saved, sessions, and activity log</li>
-          <li>Added Confluence auto-sync — upserts user row by email on analytics page load</li>
-          <li>Added per-session analytics tracking (bulk, CSV, sprint assignments)</li>
-          <li>Renamed Settings page to Org Configs</li>
-          <li>Disabled Import Ops Tasks button (feature under rework)</li>
-          <li>Added CONFLUENCE_BASE_URL, CONFLUENCE_PAGE_ID, CONFLUENCE_SPACE_KEY to org config</li>
+          <li><strong>v1.3.0</strong> — Floating time tracker widget with Tempo Cloud worklog integration</li>
+          <li>Feature-flagged tracker (opt-in via Admin Panel → Tracker)</li>
+          <li>Shadow DOM isolation for zero page conflicts</li>
+          <li>Background timer via chrome.alarms (no performance impact)</li>
+          <li>Configurable JQL filter for task list</li>
+          <li>Tempo API token stored securely in extension storage</li>
+          <li>Stop → edit time/description → log modal flow</li>
+          <li><strong>v1.2.0</strong> — Admin panel, analytics dashboard, Confluence sync</li>
+          <li><strong>v1.1.0</strong> — Bulk task creation, CSV import, sprint selection</li>
         </ul>
       </div>
     </div>
 
     <div class="footer">
-      Jira Task Plus v1.2.0 · Chrome/Edge Extension · MIT License
+      Jira Task Plus v1.3.0 · Chrome/Edge Extension · MIT License
     </div>
   </div>
 </body>

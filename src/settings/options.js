@@ -8,6 +8,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
     item.classList.add('active');
     document.getElementById(`page-${item.dataset.page}`).classList.add('active');
     if (item.dataset.page === 'analytics') loadAnalytics();
+    if (item.dataset.page === 'tracker') loadTrackerSettings();
   });
 });
 
@@ -161,3 +162,37 @@ async function syncToConfluence(data) {
 function escHtml(str) {
   return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+
+// ── Tracker Settings ──────────────────────────────────────────────────────
+function loadTrackerSettings() {
+  chrome.storage.local.get(['jtp-features', 'jtp-tempo-token', 'jtp-tracker-jql', 'jtp-tracker-jira-base'], (res) => {
+    const features = res['jtp-features'] || {};
+    document.getElementById('tracker-enabled').checked = !!features.tracker;
+    document.getElementById('tempo-token').value = res['jtp-tempo-token'] || '';
+    document.getElementById('tracker-jql').value = res['jtp-tracker-jql'] || 'assignee = currentUser() AND sprint in openSprints() AND statusCategory != Done';
+    document.getElementById('tracker-jira-base').value = res['jtp-tracker-jira-base'] || ORG_CONFIG.JIRA_BASE_URL;
+  });
+}
+
+document.getElementById('toggle-token-vis').addEventListener('click', () => {
+  const inp = document.getElementById('tempo-token');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+});
+
+document.getElementById('save-tracker').addEventListener('click', () => {
+  const enabled = document.getElementById('tracker-enabled').checked;
+  const token = document.getElementById('tempo-token').value.trim();
+  const jql = document.getElementById('tracker-jql').value.trim();
+  const jiraBase = document.getElementById('tracker-jira-base').value.trim();
+
+  chrome.storage.local.set({
+    'jtp-features': { tracker: enabled },
+    'jtp-tempo-token': token,
+    'jtp-tracker-jql': jql,
+    'jtp-tracker-jira-base': jiraBase,
+  }, () => {
+    const status = document.getElementById('tracker-save-status');
+    status.textContent = '✅ Saved! Reload browser tabs for changes to take effect.';
+    setTimeout(() => { status.textContent = ''; }, 4000);
+  });
+});

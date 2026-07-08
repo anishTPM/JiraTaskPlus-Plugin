@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
   "name": "Jira Task Plus",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Bulk create Jira tasks from Story and Epic pages.",
   "permissions": [
     "activeTab",
     "storage",
     "tabs",
-    "contextMenus"
+    "contextMenus",
+    "alarms"
   ],
   "host_permissions": [
     "*://*.atlassian.net/*"
@@ -18,6 +19,11 @@
         "*://*.atlassian.net/*"
       ],
       "js": ["content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["tracker/tracker-widget.js"],
       "run_at": "document_idle"
     }
   ],

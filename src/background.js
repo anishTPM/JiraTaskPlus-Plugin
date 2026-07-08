@@ -1,4 +1,12 @@
+import { initTrackerBackground } from './tracker/tracker-background.js';
+
 const FOCUS_KEY = 'jtp-focus-mode';
+
+// ── Feature Flags ─────────────────────────────────────────────────────────
+chrome.storage.local.get('jtp-features', (res) => {
+  const features = res['jtp-features'] || {};
+  if (features.tracker) initTrackerBackground();
+});
 
 // ── Register context menu items on install/startup ─────────────────────────
 function createMenus() {

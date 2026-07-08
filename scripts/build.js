@@ -12,7 +12,7 @@ const releases = path.join(root, 'releases');
 
 // ── 1. Clean & create build dirs ──────────────────────────────────────────
 fs.rmSync(build, { recursive: true, force: true });
-['', 'modal', 'settings', 'assets'].forEach(d =>
+['', 'modal', 'settings', 'assets', 'tracker'].forEach(d =>
   fs.mkdirSync(path.join(build, d), { recursive: true })
 );
 fs.mkdirSync(releases, { recursive: true });
@@ -36,7 +36,7 @@ const obfuscateOptions = {
   rotateStringArray: true,
 };
 
-['modal/modal.js', 'settings/options.js'].forEach(file => {
+['modal/modal.js', 'settings/options.js', 'tracker/tracker-widget.js'].forEach(file => {
   const filePath = path.join(build, file);
   if (!fs.existsSync(filePath)) return;
   const code = fs.readFileSync(filePath, 'utf8');

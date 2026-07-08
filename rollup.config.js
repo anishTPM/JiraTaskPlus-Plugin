@@ -32,4 +32,9 @@ export default [
     output: { file: 'build/settings/options.js', format: 'iife' },
     plugins,
   },
+  {
+    input: 'src/tracker/tracker-widget.js',
+    output: { file: 'build/tracker/tracker-widget.js', format: 'iife' },
+    plugins,
+  },
 ];

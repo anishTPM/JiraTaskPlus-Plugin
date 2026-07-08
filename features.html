@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jira Task Plus v1.2.0 — Features</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.6; }
+    .container { max-width: 900px; margin: 0 auto; padding: 60px 24px; }
+    .hero { text-align: center; margin-bottom: 64px; }
+    .hero h1 { font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #6366f1, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+    .hero .version { display: inline-block; background: #1e293b; border: 1px solid #334155; padding: 4px 14px; border-radius: 20px; font-size: 13px; color: #94a3b8; margin-bottom: 16px; }
+    .hero p { font-size: 18px; color: #94a3b8; max-width: 600px; margin: 0 auto; }
+    .section { margin-bottom: 48px; }
+    .section h2 { font-size: 24px; font-weight: 700; margin-bottom: 20px; color: #f1f5f9; display: flex; align-items: center; gap: 10px; }
+    .section h2 .icon { font-size: 28px; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; transition: border-color 0.2s; }
+    .card:hover { border-color: #6366f1; }
+    .card h3 { font-size: 15px; font-weight: 600; color: #f8fafc; margin-bottom: 6px; }
+    .card p { font-size: 13px; color: #94a3b8; }
+    .badge-new { display: inline-block; background: #22c55e; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
+    .badge-changed { display: inline-block; background: #f59e0b; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
+    .changelog { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px; }
+    .changelog ul { list-style: none; padding: 0; }
+    .changelog li { padding: 8px 0; border-bottom: 1px solid #334155; font-size: 14px; color: #cbd5e1; }
+    .changelog li:last-child { border-bottom: none; }
+    .changelog li::before { content: '→'; margin-right: 10px; color: #6366f1; font-weight: 700; }
+    .footer { text-align: center; margin-top: 64px; padding-top: 24px; border-top: 1px solid #334155; color: #64748b; font-size: 13px; }
+    .algo-box { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; font-family: 'SF Mono', monospace; font-size: 13px; color: #a5b4fc; }
+    .algo-box code { display: block; margin-bottom: 8px; color: #e0e7ff; font-size: 14px; font-weight: 600; }
+    .algo-box p { color: #94a3b8; font-family: -apple-system, sans-serif; margin-top: 12px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <div class="version">v1.2.0</div>
+      <h1>Jira Task Plus</h1>
+      <p>Bulk create Jira tasks from Epic & Story pages. Now with an Admin Panel, Analytics dashboard, and Confluence sync.</p>
+    </div>
+
+    <div class="section">
+      <h2><span class="icon">🚀</span> What's New in v1.2.0</h2>
+      <div class="card-grid">
+        <div class="card">
+          <h3>Admin Panel <span class="badge-new">NEW</span></h3>
+          <p>Options page redesigned as a full admin panel with sidebar navigation and multiple sections.</p>
+        </div>
+        <div class="card">
+          <h3>Analytics Dashboard <span class="badge-new">NEW</span></h3>
+          <p>Track total tasks created, bulk sessions, and time saved — all calculated automatically.</p>
+        </div>
+        <div class="card">
+          <h3>Confluence Sync <span class="badge-new">NEW</span></h3>
+          <p>Analytics auto-sync to a shared Confluence page. Each user gets their own row, identified by email.</p>
+        </div>
+        <div class="card">
+          <h3>Ops Tasks Disabled <span class="badge-changed">CHANGED</span></h3>
+          <p>Import Ops Tasks button temporarily disabled in the modal footer while feature is being reworked.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span class="icon">⚡</span> Core Features</h2>
+      <div class="card-grid">
+        <div class="card">
+          <h3>Bulk Task Creation</h3>
+          <p>Create multiple tasks at once from any Story, Epic, or Program page.</p>
+        </div>
+        <div class="card">
+          <h3>Auto-Context</h3>
+          <p>Automatically fills Epic Link, Program, Sprint from the parent issue.</p>
+        </div>
+        <div class="card">
+          <h3>Smart Defaults</h3>
+          <p>Copies Financial Category, Assignee, and Sprint from the previous row.</p>
+        </div>
+        <div class="card">
+          <h3>Sprint Selection</h3>
+          <p>Per-row sprint picker showing active 🟢 and future 🔵 sprints.</p>
+        </div>
+        <div class="card">
+          <h3>CSV Import</h3>
+          <p>Import tasks from CSV with a downloadable sample template.</p>
+        </div>
+        <div class="card">
+          <h3>Multi-Environment</h3>
+          <p>Auto-detects production or staging based on Jira instance URL.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span class="icon">⏱️</span> Time Saved Algorithm</h2>
+      <div class="algo-box">
+        <code>Time Saved = (tasks × 3 min) + (sprint_assigned × 1 min) + (csv_imported × 2 min)</code>
+        • 3 min/task — manual navigation, field filling, and submission avoided<br>
+        • 1 min/task — batch sprint assignment vs doing it individually<br>
+        • 2 min/task — CSV import vs manual row-by-row entry
+        <p>Example: 20 tasks with sprint assignment via CSV = (20×3) + (20×1) + (20×2) = 120 min = 2 hours saved.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span class="icon">📋</span> Confluence Table Columns</h2>
+      <div class="changelog">
+        <ul>
+          <li><strong>User</strong> — Jira email address (unique identifier)</li>
+          <li><strong>Tasks</strong> — Total tasks created via the extension</li>
+          <li><strong>Time Saved</strong> — Calculated using the algorithm above</li>
+          <li><strong>Bulk Sessions</strong> — Number of times "Create All" was used</li>
+          <li><strong>Last Updated</strong> — Timestamp of last sync</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span class="icon">📝</span> Changelog</h2>
+      <div class="changelog">
+        <ul>
+          <li>Added admin panel with sidebar navigation (Org Configs + Analytics)</li>
+          <li>Added analytics dashboard with task count, time saved, sessions, and activity log</li>
+          <li>Added Confluence auto-sync — upserts user row by email on analytics page load</li>
+          <li>Added per-session analytics tracking (bulk, CSV, sprint assignments)</li>
+          <li>Renamed Settings page to Org Configs</li>
+          <li>Disabled Import Ops Tasks button (feature under rework)</li>
+          <li>Added CONFLUENCE_BASE_URL, CONFLUENCE_PAGE_ID, CONFLUENCE_SPACE_KEY to org config</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer">
+      Jira Task Plus v1.2.0 · Chrome/Edge Extension · MIT License
+    </div>
+  </div>
+</body>
+</html>

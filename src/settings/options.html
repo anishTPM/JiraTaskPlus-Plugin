@@ -4,55 +4,177 @@
   <meta charset="UTF-8" />
   <title>Jira Task Plus — Settings</title>
   <link href="../assets/styles.css" rel="stylesheet" />
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .admin-layout { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar { width: 240px; background: #1e293b; color: #e2e8f0; display: flex; flex-direction: column; }
+    .sidebar-brand { padding: 20px 16px; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; }
+    .sidebar-brand span { font-size: 18px; }
+    .sidebar-brand h1 { font-size: 14px; font-weight: 700; margin: 0; color: #f8fafc; }
+    .sidebar-brand small { font-size: 11px; color: #94a3b8; display: block; }
+    .sidebar-nav { flex: 1; padding: 12px 8px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: #cbd5e1; transition: all 0.15s; margin-bottom: 2px; }
+    .nav-item:hover { background: #334155; color: #f1f5f9; }
+    .nav-item.active { background: #3b82f6; color: #fff; }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+    .sidebar-footer { padding: 16px; border-top: 1px solid #334155; font-size: 11px; color: #64748b; text-align: center; }
+
+    /* Main content */
+    .main-content { flex: 1; background: #f8fafc; overflow-y: auto; }
+    .page-header { padding: 24px 32px 16px; border-bottom: 1px solid #e2e8f0; background: #fff; }
+    .page-header h2 { margin: 0; font-size: 20px; font-weight: 700; color: #1e293b; }
+    .page-header p { margin: 4px 0 0; font-size: 13px; color: #64748b; }
+    .page-body { padding: 24px 32px; }
+
+    /* Cards */
+    .config-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .config-card h3 { margin: 0 0 12px; font-size: 14px; font-weight: 600; color: #334155; display: flex; align-items: center; gap: 8px; }
+    .config-grid { display: grid; grid-template-columns: 180px 1fr; gap: 8px 16px; font-size: 13px; }
+    .config-grid .label { color: #64748b; font-weight: 500; }
+    .config-grid .value { color: #1e293b; font-family: 'SF Mono', monospace; font-size: 12px; }
+    .badge { display: inline-block; background: #e0e7ff; color: #3730a3; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; margin: 1px 2px; }
+
+    /* Analytics */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center; }
+    .stat-card .stat-value { font-size: 32px; font-weight: 800; color: #1e293b; }
+    .stat-card .stat-label { font-size: 12px; color: #64748b; margin-top: 4px; }
+    .stat-card.highlight { background: linear-gradient(135deg, #eff6ff, #dbeafe); border-color: #93c5fd; }
+    .stat-card.highlight .stat-value { color: #1d4ed8; }
+    .stat-card.green { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-color: #86efac; }
+    .stat-card.green .stat-value { color: #16a34a; }
+
+    .sync-status { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-size: 12px; color: #166534; margin-bottom: 16px; }
+    .sync-status.error { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+    .sync-status.syncing { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+
+    .breakdown-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .breakdown-table th { text-align: left; padding: 8px 12px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; }
+    .breakdown-table td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+
+    .page { display: none; }
+    .page.active { display: block; }
+  </style>
 </head>
-<body class="bg-base-200 min-h-screen p-8">
-  <div class="max-w-2xl mx-auto">
-    <div class="flex items-center gap-3 mb-6">
-      <span class="text-2xl">⚙️</span>
-      <h1 class="text-xl font-bold">Jira Task Plus — Settings</h1>
-    </div>
-
-    <div class="alert alert-info mb-6 text-sm">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"/>
-      </svg>
-      These settings are org-configured and cannot be modified. Contact your administrator or refer to the
-      <a href="https://github.com" target="_blank" class="link">source repository</a> to customise.
-    </div>
-
-    <!-- Org Config -->
-    <div class="card bg-base-100 shadow mb-4">
-      <div class="card-body">
-        <h2 class="card-title text-base">🏢 Organisation</h2>
-        <div class="grid grid-cols-2 gap-3 text-sm">
-          <div class="font-medium text-base-content/60">Jira Base URL</div>
-          <div id="cfg-base-url" class="font-mono"></div>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span>⚡</span>
+        <div>
+          <h1>Jira Task Plus</h1>
+          <small>Settings</small>
         </div>
       </div>
-    </div>
+      <nav class="sidebar-nav">
+        <div class="nav-item active" data-page="org-configs">
+          <span class="icon">🏢</span> Org Configs
+        </div>
+        <div class="nav-item" data-page="analytics">
+          <span class="icon">📊</span> Analytics
+        </div>
+      </nav>
+      <div class="sidebar-footer">v1.2.0 · Bulk Task Creator</div>
+    </aside>
 
-    <!-- Custom Fields -->
-    <div class="card bg-base-100 shadow mb-4">
-      <div class="card-body">
-        <h2 class="card-title text-base">🔧 Custom Fields</h2>
-        <div class="grid grid-cols-2 gap-2 text-sm" id="cfg-fields"></div>
-      </div>
-    </div>
+    <!-- Main -->
+    <main class="main-content">
+      <!-- Org Configs Page -->
+      <div id="page-org-configs" class="page active">
+        <div class="page-header">
+          <h2>🏢 Org Configs</h2>
+          <p>Organisation-level configuration. Contact your administrator to modify.</p>
+        </div>
+        <div class="page-body">
+          <div class="config-card">
+            <h3>🌐 Environment</h3>
+            <div class="config-grid">
+              <span class="label">Active Environment</span>
+              <span class="value" id="cfg-env"></span>
+              <span class="label">Jira Base URL</span>
+              <span class="value" id="cfg-base-url"></span>
+              <span class="label">Confluence API</span>
+              <span class="value" id="cfg-confluence-url"></span>
+              <span class="label">Confluence Space</span>
+              <span class="value" id="cfg-confluence-space"></span>
+            </div>
+          </div>
 
-    <!-- Issue Config -->
-    <div class="card bg-base-100 shadow mb-4">
-      <div class="card-body">
-        <h2 class="card-title text-base">🔗 Issue Configuration</h2>
-        <div class="grid grid-cols-2 gap-3 text-sm">
-          <div class="font-medium text-base-content/60">Link Type</div>
-          <div id="cfg-link-type" class="font-mono"></div>
-          <div class="font-medium text-base-content/60">Financial Category Options</div>
-          <div id="cfg-fc-options"></div>
+          <div class="config-card">
+            <h3>🔧 Custom Fields</h3>
+            <div class="config-grid" id="cfg-fields"></div>
+          </div>
+
+          <div class="config-card">
+            <h3>🔗 Issue Configuration</h3>
+            <div class="config-grid">
+              <span class="label">Link Type</span>
+              <span class="value" id="cfg-link-type"></span>
+              <span class="label">Financial Categories</span>
+              <span class="value" id="cfg-fc-options"></span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <p class="text-xs text-base-content/40 text-center mt-6">Jira Task Plus · Bulk Task Creator</p>
+      <!-- Analytics Page -->
+      <div id="page-analytics" class="page">
+        <div class="page-header">
+          <h2>📊 Analytics</h2>
+          <p>Track task creation metrics and time saved using Jira Task Plus.</p>
+        </div>
+        <div class="page-body">
+          <div id="sync-status" class="sync-status syncing">⏳ Syncing analytics to Confluence...</div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-value" id="stat-total-tasks">0</div>
+              <div class="stat-label">Total Tasks Created</div>
+            </div>
+            <div class="stat-card highlight">
+              <div class="stat-value" id="stat-time-saved">0h</div>
+              <div class="stat-label">Time Saved</div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-value" id="stat-sessions">0</div>
+              <div class="stat-label">Bulk Sessions</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="stat-avg-per-session">0</div>
+              <div class="stat-label">Avg Tasks/Session</div>
+            </div>
+          </div>
+
+          <div class="config-card">
+            <h3>⏱️ Time Saved Breakdown</h3>
+            <p style="font-size:12px; color:#64748b; margin:0 0 12px;">
+              Algorithm: Each task created via bulk saves ~3 min (manual navigation + field filling + submit).
+              Batch sprint assignment saves ~1 min/task. CSV import saves ~2 min/task extra.
+              Formula: <code>(tasks × 3) + (sprint_assigned × 1) + (csv_imported × 2)</code> minutes.
+            </p>
+            <table class="breakdown-table">
+              <thead>
+                <tr><th>Metric</th><th>Count</th><th>Time Saved</th></tr>
+              </thead>
+              <tbody id="breakdown-body"></tbody>
+            </table>
+          </div>
+
+          <div class="config-card">
+            <h3>📅 Recent Activity</h3>
+            <table class="breakdown-table">
+              <thead>
+                <tr><th>Date</th><th>Tasks</th><th>Project</th><th>Method</th></tr>
+              </thead>
+              <tbody id="activity-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
   </div>
 
   <script src="options.js"></script>

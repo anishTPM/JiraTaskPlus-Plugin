@@ -54,9 +54,6 @@ async function init() {
   document.getElementById('btn-import-csv').addEventListener('click', () => document.getElementById('csv-file-input').click());
   document.getElementById('csv-file-input').addEventListener('change', handleCsvImport);
   document.getElementById('btn-sample-csv').addEventListener('click', downloadSampleCsv);
-  document.getElementById('btn-ops-download').addEventListener('click', downloadOpsTemplate);
-  document.getElementById('btn-ops-upload').addEventListener('click', () => document.getElementById('ops-file-input').click());
-  document.getElementById('ops-file-input').addEventListener('change', handleOpsImport);
 
   // Show UI immediately, add first row, then load data
   addRow();
@@ -595,9 +592,13 @@ async function createAll() {
     }
   }
 
+  let sprintAssignedCount = 0;
   for (const [sprintId, keys] of Object.entries(sprintGroups)) {
-    try { await addIssueToSprint(sprintId, keys); } catch (e) {}
+    try { await addIssueToSprint(sprintId, keys); sprintAssignedCount += keys.length; } catch (e) {}
   }
+
+  // Track analytics
+  if (created > 0) trackAnalytics(created, sprintAssignedCount, 0);
 
   btn.disabled = false;
   btn.textContent = 'Create All';
@@ -1041,6 +1042,7 @@ function handleCsvImport(e) {
   reader.onload = (ev) => {
     const lines = ev.target.result.trim().split('\n');
     const headers = lines[0].split(',').map(h => h.trim());
+    let importedCount = 0;
     lines.slice(1).forEach(line => {
       const vals = line.split(',').map(v => v.trim());
       const row = {};
@@ -1053,7 +1055,10 @@ function handleCsvImport(e) {
         financialCategory: row.financialCategory,
         labels: row.labels,
       });
+      importedCount++;
     });
+    // Mark these rows as CSV-imported for analytics
+    state.csvImportedCount = (state.csvImportedCount || 0) + importedCount;
   };
   reader.readAsText(file);
   e.target.value = '';
@@ -1084,6 +1089,28 @@ function markRowError(row, msg) {
   badge.textContent = `✗ Failed`;
   badge.title = msg;
   main.appendChild(badge);
+}
+
+// ── Analytics Tracking ──────────────────────────────────────────────────────
+function trackAnalytics(tasksCreated, sprintAssigned, csvImported) {
+  const csvCount = state.csvImportedCount || csvImported;
+  chrome.storage.local.get('jtp-analytics', (result) => {
+    const analytics = result['jtp-analytics'] || { totalTasks: 0, sessions: 0, sprintAssigned: 0, csvImported: 0, history: [] };
+    analytics.totalTasks += tasksCreated;
+    analytics.sessions += 1;
+    analytics.sprintAssigned = (analytics.sprintAssigned || 0) + sprintAssigned;
+    analytics.csvImported = (analytics.csvImported || 0) + csvCount;
+    analytics.history.push({
+      date: new Date().toISOString().split('T')[0],
+      count: tasksCreated,
+      project: state.projectKey,
+      method: csvCount > 0 ? 'csv' : 'bulk',
+    });
+    // Keep last 100 entries
+    if (analytics.history.length > 100) analytics.history = analytics.history.slice(-100);
+    chrome.storage.local.set({ 'jtp-analytics': analytics });
+    state.csvImportedCount = 0;
+  });
 }
 
 function esc(str) {

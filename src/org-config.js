@@ -11,6 +11,9 @@
 const ENVIRONMENTS = {
   production: {
     JIRA_BASE_URL: 'https://teneritycloud.atlassian.net',
+    CONFLUENCE_BASE_URL: 'https://teneritycloud.atlassian.net/wiki/rest/api/content',
+    CONFLUENCE_PAGE_ID: '476413971',
+    CONFLUENCE_SPACE_KEY: 'TPMT',
     CUSTOM_FIELDS: {
       FINANCIAL_CATEGORY: 'customfield_10195',
       STORY_POINTS: 'customfield_10058',
@@ -25,6 +28,9 @@ const ENVIRONMENTS = {
   },
   staging: {
     JIRA_BASE_URL: 'https://tenerity-staging.atlassian.net',
+    CONFLUENCE_BASE_URL: 'https://tenerity-staging.atlassian.net/wiki/rest/api/content',
+    CONFLUENCE_PAGE_ID: '',
+    CONFLUENCE_SPACE_KEY: 'TPMT',
     CUSTOM_FIELDS: {
       FINANCIAL_CATEGORY: 'customfield_10141',
       STORY_POINTS: 'customfield_10107', // not on Task screen — update when correct field found

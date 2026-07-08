@@ -1,6 +1,6 @@
 # Jira Task Plus
 
-A Chrome/Edge extension for bulk creating Jira tasks directly from Epic and Story pages — no extra login required.
+A Chrome/Edge extension for bulk creating Jira tasks and tracking time with Tempo — no extra login required.
 
 ## Features
 
@@ -11,6 +11,28 @@ A Chrome/Edge extension for bulk creating Jira tasks directly from Epic and Stor
 - **CSV Import** — Import tasks from CSV with downloadable sample template
 - **Board Memory** — Remembers selected board per project
 - **Multi-environment** — Auto-detects environment based on Jira instance URL
+- **Admin Panel** — Sidebar-based settings with Org Configs, Analytics, and Tracker pages
+- **Analytics Dashboard** — Track tasks created, time saved, and sync stats to Confluence
+- **⏱️ Floating Time Tracker** — Persistent draggable widget on all pages with Tempo Cloud integration
+- **Tempo Worklog** — Play/Stop timer, edit time & description, log directly to Tempo
+
+## Time Tracker
+
+A floating bubble widget that lives on every browser page:
+
+1. **Idle** — Draggable ⏱️ icon (position remembered). Click to open task list.
+2. **Task List** — Shows up to 10 tasks from your configurable JQL filter with epic info.
+3. **Active Timer** — Full-width bottom bar with live timer, task details, epic badge, and stop button.
+4. **Collapsible** — `«` button collapses bar to a compact pill; `»` expands it back.
+5. **Log Time** — On stop, inline form appears in the bar to edit time, add description, and log to Tempo.
+
+### Setup
+
+1. Open Admin Panel → Tracker tab
+2. Enable the tracker toggle
+3. Paste your Tempo API token (generate from Tempo → Settings → API Integration)
+4. Set your JQL filter (default: `assignee = currentUser() AND sprint in openSprints() AND statusCategory != Done`)
+5. Save → reload any tab
 
 ## Installation
 
@@ -39,8 +61,8 @@ Edit `src/org-config.js` to configure for your Jira instance:
 
 1. Set your `JIRA_BASE_URL` for each environment
 2. Update `CUSTOM_FIELDS` with your instance's field IDs
-   - Find field IDs at: `https://YOUR-DOMAIN.atlassian.net/rest/api/3/field`
-3. Adjust `SHARED` settings (issue types, financial categories, etc.)
+3. Set `CONFLUENCE_BASE_URL`, `CONFLUENCE_PAGE_ID`, `CONFLUENCE_SPACE_KEY` for analytics sync
+4. Adjust `SHARED` settings (issue types, financial categories, etc.)
 
 The extension auto-detects which environment to use based on the current page URL.
 
@@ -52,7 +74,11 @@ The extension auto-detects which environment to use based on the current page UR
 │   ├── assets/              # Icons and compiled CSS
 │   ├── modal/               # Bulk task creation modal UI
 │   ├── popup/               # Extension popup
-│   ├── settings/            # Options/settings page
+│   ├── settings/            # Admin panel (Org Configs, Analytics, Tracker)
+│   ├── tracker/             # Floating time tracker (feature-flagged)
+│   │   ├── tracker-widget.js    # Shadow DOM widget (all pages)
+│   │   ├── tracker-background.js # Timer + API proxy in service worker
+│   │   └── tempo-api.js         # Tempo Cloud API client
 │   ├── background.js        # Service worker
 │   ├── content.js           # Content script (injected into Jira pages)
 │   ├── org-config.js        # Organization & environment config
@@ -60,6 +86,7 @@ The extension auto-detects which environment to use based on the current page UR
 ├── scripts/build.js         # Build script (bundle, obfuscate, zip)
 ├── manifest.json            # Chrome Extension Manifest V3
 ├── rollup.config.js         # Rollup bundler config
+├── features.html            # Single-page feature showcase
 └── package.json
 ```
 
@@ -89,10 +116,13 @@ Watches for file changes and rebuilds automatically (without obfuscation).
 | Permission | Reason |
 |---|---|
 | `activeTab` | Read Jira page content |
-| `storage` | Save settings and board preferences |
+| `storage` | Save settings, timer state, and board preferences |
 | `tabs` | Open settings page |
 | `contextMenus` | Right-click menu options |
+| `alarms` | Background timer keepalive |
 | `*://*.atlassian.net/*` | Run on Jira Cloud instances |
+| `https://api.tempo.io/*` | Log worklogs to Tempo Cloud |
+| `<all_urls>` | Floating tracker widget on all pages |
 
 ## Tech Stack
 
@@ -100,6 +130,8 @@ Watches for file changes and rebuilds automatically (without obfuscation).
 - Tailwind CSS + DaisyUI
 - Rollup (bundler)
 - JavaScript Obfuscator (production builds)
+- Shadow DOM (tracker widget isolation)
+- Tempo Cloud API v4
 
 ## License
 

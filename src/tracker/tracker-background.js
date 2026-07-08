@@ -1,6 +1,6 @@
 // ── Tracker Background Handler ──────────────────────────────────────────────
 // Manages timer state via chrome.alarms + chrome.storage.local
-// Completely isolated — only activated when FEATURE_TRACKER is enabled.
+// Also proxies Tempo API calls (content scripts can't due to CORS).
 
 const TIMER_KEY = 'jtp-tracker-timer';
 const ALARM_NAME = 'jtp-tracker-tick';
@@ -8,8 +8,7 @@ const ALARM_NAME = 'jtp-tracker-tick';
 export function initTrackerBackground() {
   chrome.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === ALARM_NAME) {
-      // Keepalive tick — timer state is time-based, no increment needed
-      // Just ensures service worker stays alive during tracking
+      // Keepalive tick — ensures service worker stays alive during tracking
     }
   });
 
@@ -18,6 +17,8 @@ export function initTrackerBackground() {
       const timerState = {
         issueKey: msg.issueKey,
         summary: msg.summary,
+        epicKey: msg.epicKey || '',
+        epicSummary: msg.epicSummary || '',
         startTime: Date.now(),
         running: true,
       };
@@ -53,6 +54,52 @@ export function initTrackerBackground() {
         chrome.alarms.clear(ALARM_NAME);
         sendResponse({ ok: true });
       });
+      return true;
+    }
+
+    // Proxy Tempo API call from content script (avoids CORS)
+    if (msg.type === 'JTP_TEMPO_LOG') {
+      (async () => {
+        try {
+          const res = await fetch('https://api.tempo.io/4/worklogs', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${msg.token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(msg.payload),
+          });
+          if (!res.ok) {
+            const err = await res.text();
+            sendResponse({ ok: false, error: `Tempo ${res.status}: ${err}` });
+          } else {
+            const data = await res.json();
+            sendResponse({ ok: true, data });
+          }
+        } catch (e) {
+          sendResponse({ ok: false, error: e.message });
+        }
+      })();
+      return true;
+    }
+
+    // Proxy Jira API calls from content script (avoids CORS on non-Atlassian pages)
+    if (msg.type === 'JTP_JIRA_FETCH') {
+      (async () => {
+        try {
+          const res = await fetch(msg.url, {
+            method: msg.method || 'GET',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            ...(msg.body ? { body: JSON.stringify(msg.body) } : {}),
+          });
+          if (!res.ok) {
+            const err = await res.text();
+            sendResponse({ ok: false, error: `${res.status}: ${err}` });
+          } else {
+            const data = await res.json();
+            sendResponse({ ok: true, data });
+          }
+        } catch (e) {
+          sendResponse({ ok: false, error: e.message });
+        }
+      })();
       return true;
     }
   });

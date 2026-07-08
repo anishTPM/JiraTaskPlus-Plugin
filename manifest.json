@@ -11,7 +11,8 @@
     "alarms"
   ],
   "host_permissions": [
-    "*://*.atlassian.net/*"
+    "*://*.atlassian.net/*",
+    "https://api.tempo.io/*"
   ],
   "content_scripts": [
     {

@@ -54,11 +54,20 @@ const SHARED = {
     'Capitalised',
     'Expensed',
     'Non-Capitalised',
+    'Oversight-OpEx',
   ],
 };
 
-const env = 'staging';  // staging // production
-const envConfig = ENVIRONMENTS[env] || ENVIRONMENTS.production;
+function detectEnvironment() {
+  const currentUrl = window.location.origin;
+  for (const [name, config] of Object.entries(ENVIRONMENTS)) {
+    if (currentUrl.startsWith(config.JIRA_BASE_URL)) return name;
+  }
+  return 'production';
+}
+
+const env = detectEnvironment();
+const envConfig = ENVIRONMENTS[env];
 
 const ORG_CONFIG = {
   ...SHARED,

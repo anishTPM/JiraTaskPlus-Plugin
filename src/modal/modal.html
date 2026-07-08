@@ -28,6 +28,21 @@
     .section-header { background: linear-gradient(90deg, #eef2ff 0%, #f8fafc 100%); padding: 8px 16px; border-radius: 6px; margin-bottom: 8px; }
     .section-header span { color: #4338ca; font-weight: 600; font-size: 13px; }
 
+    /* Ops tree view */
+    .ops-tree { margin-top: 8px; }
+    .ops-program-row { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+    .ops-program-row .prog-key { font-weight: 700; color: #16a34a; font-size: 13px; }
+    .ops-epic-group { margin-bottom: 12px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+    .ops-epic-header { background: linear-gradient(90deg, #eef2ff 0%, #f8fafc 100%); padding: 10px 16px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .ops-epic-header .epic-title { font-weight: 600; font-size: 13px; color: #4338ca; }
+    .ops-epic-header .task-count { font-size: 11px; color: #9ca3af; margin-left: auto; }
+    .ops-task-list { padding: 4px 8px; }
+    .ops-task-row { display: grid; grid-template-columns: 2fr 2fr 70px 120px 1fr; gap: 6px; padding: 6px 8px; border-bottom: 1px solid #f3f4f6; align-items: center; }
+    .ops-task-row:last-child { border-bottom: none; }
+    .ops-task-row input, .ops-task-row select { font-size: 11px; padding: 5px 8px; border: 1px solid #e5e7eb; border-radius: 4px; outline: none; }
+    .ops-task-row input:focus, .ops-task-row select:focus { border-color: #6366f1; }
+    .ops-col-header { display: grid; grid-template-columns: 2fr 2fr 70px 120px 1fr; gap: 6px; padding: 4px 8px; font-size: 10px; color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
     /* Task row */
     .task-row { padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
     .task-row:last-child { border-bottom: none; }
@@ -143,7 +158,15 @@
             <li><button id="btn-sample-csv" class="text-sm px-3 py-2 hover:bg-gray-50 w-full text-left">Template</button></li>
           </ul>
         </div>
+        <div id="ops-import-wrap" class="dropdown dropdown-top hidden">
+          <label tabindex="0" class="btn-add-row" style="cursor:pointer; background:#eef2ff; border-color:#c7d2fe; color:#4338ca;">⚡ Import Ops Tasks</label>
+          <ul tabindex="0" class="dropdown-content menu shadow bg-white rounded-lg w-48 border border-gray-200 mb-1">
+            <li><button id="btn-ops-download" class="text-sm px-3 py-2 hover:bg-gray-50 w-full text-left">📥 Download Template</button></li>
+            <li><button id="btn-ops-upload" class="text-sm px-3 py-2 hover:bg-gray-50 w-full text-left">📤 Upload Template</button></li>
+          </ul>
+        </div>
         <input id="csv-file-input" type="file" accept=".csv" class="hidden" />
+        <input id="ops-file-input" type="file" accept=".csv" class="hidden" />
       </div>
       <div class="flex items-center gap-3">
         <span id="status-msg" class="text-sm text-gray-400"></span>

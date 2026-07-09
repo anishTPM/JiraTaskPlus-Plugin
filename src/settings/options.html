@@ -79,8 +79,11 @@
         <div class="nav-item" data-page="tracker">
           <span class="icon">🎯</span> Tracker
         </div>
+        <div class="nav-item" data-page="calendar">
+          <span class="icon">📅</span> Calendar
+        </div>
       </nav>
-      <div class="sidebar-footer">v1.3.0 · Bulk Task Creator</div>
+      <div class="sidebar-footer">v1.4.0 · Bulk Task Creator</div>
     </aside>
 
     <!-- Main -->
@@ -215,6 +218,53 @@
 
           <button id="save-tracker" style="background:linear-gradient(135deg,#6366f1,#3b82f6); color:#fff; border:none; border-radius:8px; padding:10px 24px; font-size:13px; font-weight:600; cursor:pointer; margin-top:8px;">💾 Save Tracker Settings</button>
           <span id="tracker-save-status" style="margin-left:12px; font-size:12px; color:#16a34a;"></span>
+        </div>
+      </div>
+      <!-- Calendar Settings Page -->
+      <div id="page-calendar" class="page">
+        <div class="page-header">
+          <h2>📅 Calendar Integration</h2>
+          <p>Connect Outlook Calendar to see upcoming meetings and log time against Jira issues.</p>
+        </div>
+        <div class="page-body">
+          <!-- Edge-only notice (shown/hidden by JS) -->
+          <div id="calendar-edge-notice" style="display:none; background:#fffbeb; border:1px solid #fcd34d; border-radius:12px; padding:16px 20px; margin-bottom:16px;">
+            <div style="font-size:14px; font-weight:700; color:#92400e; margin-bottom:6px;">🌐 Microsoft Edge Required</div>
+            <p style="font-size:13px; color:#78350f; margin:0 0 10px;">The Calendar integration only works in <strong>Microsoft Edge</strong> due to how Chrome encrypts authentication tokens, making them inaccessible to extensions.</p>
+            <p style="font-size:12px; color:#92400e; margin:0;">👉 Install the extension in Edge and use it there for calendar features: <a href="https://www.microsoft.com/edge" target="_blank" style="color:#1d4ed8;">Download Microsoft Edge</a></p>
+          </div>
+
+          <div id="calendar-controls">
+            <div class="config-card">
+              <h3>🔌 Feature Toggle</h3>
+              <label style="display:flex; align-items:center; gap:10px; font-size:13px; cursor:pointer;">
+                <input type="checkbox" id="calendar-enabled" style="width:18px; height:18px; cursor:pointer;" />
+                Enable Calendar Integration (Outlook 365)
+              </label>
+              <p style="font-size:11px; color:#94a3b8; margin:8px 0 0;">Requires you to be logged into Outlook/Office 365 in Edge. An Outlook tab will be opened automatically if needed.</p>
+            </div>
+
+            <div class="config-card">
+              <h3>🧪 Test Connection</h3>
+              <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Fetch today's events from your Outlook calendar to verify the integration works.</p>
+              <button id="test-calendar" style="background:linear-gradient(135deg,#6366f1,#3b82f6); color:#fff; border:none; border-radius:8px; padding:10px 24px; font-size:13px; font-weight:600; cursor:pointer;">📡 Fetch Today's Events</button>
+              <button id="debug-calendar" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:8px; padding:10px 16px; font-size:12px; font-weight:600; cursor:pointer; margin-left:8px;">🔍 Debug Tokens</button>
+              <span id="calendar-test-status" style="margin-left:12px; font-size:12px;"></span>
+            </div>
+
+            <div class="config-card" id="calendar-results" style="display:none;">
+              <h3>📋 Today's Events</h3>
+              <table class="breakdown-table">
+                <thead>
+                  <tr><th>Time</th><th>Title</th><th>Duration</th><th>Status</th></tr>
+                </thead>
+                <tbody id="calendar-events-body"></tbody>
+              </table>
+            </div>
+
+            <button id="save-calendar" style="background:linear-gradient(135deg,#6366f1,#3b82f6); color:#fff; border:none; border-radius:8px; padding:10px 24px; font-size:13px; font-weight:600; cursor:pointer; margin-top:8px;">💾 Save Calendar Settings</button>
+            <span id="calendar-save-status" style="margin-left:12px; font-size:12px; color:#16a34a;"></span>
+          </div>
         </div>
       </div>
     </main>

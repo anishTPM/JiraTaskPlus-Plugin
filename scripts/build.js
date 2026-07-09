@@ -12,7 +12,7 @@ const releases = path.join(root, 'releases');
 
 // ── 1. Clean & create build dirs ──────────────────────────────────────────
 fs.rmSync(build, { recursive: true, force: true });
-['', 'modal', 'settings', 'assets', 'tracker'].forEach(d =>
+['', 'modal', 'settings', 'assets', 'tracker', 'calendar'].forEach(d =>
   fs.mkdirSync(path.join(build, d), { recursive: true })
 );
 fs.mkdirSync(releases, { recursive: true });
@@ -49,6 +49,7 @@ console.log('📋 Copying static files…');
 fs.copyFileSync(path.join(root, 'manifest.json'), path.join(build, 'manifest.json'));
 fs.copyFileSync(path.join(root, 'src/modal/modal.html'), path.join(build, 'modal/modal.html'));
 fs.copyFileSync(path.join(root, 'src/settings/options.html'), path.join(build, 'settings/options.html'));
+fs.copyFileSync(path.join(root, 'src/calendar/calendar-relay.js'), path.join(build, 'calendar/calendar-relay.js'));
 
 // Copy all assets (styles.css + icons)
 const assetsDir = path.join(root, 'src/assets');

@@ -99,8 +99,27 @@
     .task-item .task-epic { font-size:10px; color:#94a3b8; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .task-item .play-btn { background:#22c55e; color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.15s; }
     .task-item .play-btn:hover { background:#16a34a; transform:scale(1.1); }
-    .empty-state { padding:32px; text-align:center; color:#94a3b8; font-size:13px; }
-    .loading { padding:32px; text-align:center; color:#94a3b8; font-size:13px; }
+    /* Meeting reminder bar (idle, Edge+calendar only) */
+    .meeting-bar { position:fixed; bottom:0; left:0; right:0; pointer-events:auto; background:linear-gradient(135deg,#1e1b4b,#312e81); border-top:2px solid #6366f1; box-shadow:0 -4px 24px rgba(99,102,241,0.25); display:none; z-index:2147483646; animation:barSlideUp 0.25s ease; }
+    .meeting-bar.visible { display:block; }
+    .meeting-row { display:flex; align-items:center; padding:10px 24px; gap:14px; }
+    .meeting-badge { background:#6366f1; color:#fff; font-size:10px; font-weight:700; padding:3px 8px; border-radius:10px; flex-shrink:0; white-space:nowrap; }
+    .meeting-info { flex:1; overflow:hidden; }
+    .meeting-title { font-size:13px; font-weight:600; color:#e0e7ff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .meeting-meta { font-size:10px; color:#a5b4fc; margin-top:1px; }
+    .meeting-link-btn { background:#6366f1; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0; transition:all 0.15s; }
+    .meeting-link-btn:hover { background:#4f46e5; transform:scale(1.03); }
+    .meeting-dismiss { background:none; border:1px solid #4338ca; border-radius:6px; color:#a5b4fc; font-size:12px; padding:5px 10px; cursor:pointer; flex-shrink:0; transition:all 0.15s; }
+    .meeting-dismiss:hover { border-color:#6366f1; color:#e0e7ff; }
+    /* Task picker inside meeting bar */
+    .meeting-picker { display:none; padding:8px 24px 12px; border-top:1px solid #3730a3; }
+    .meeting-picker.open { display:block; }
+    .meeting-picker-label { font-size:10px; font-weight:700; color:#a5b4fc; text-transform:uppercase; margin-bottom:6px; }
+    .meeting-picker-list { display:flex; flex-wrap:wrap; gap:6px; max-height:80px; overflow-y:auto; }
+    .mpk-item { background:#1e1b4b; border:1px solid #4338ca; border-radius:8px; padding:5px 10px; cursor:pointer; transition:all 0.15s; display:flex; align-items:center; gap:6px; }
+    .mpk-item:hover { background:#312e81; border-color:#6366f1; }
+    .mpk-key { font-size:10px; font-weight:700; color:#818cf8; }
+    .mpk-sum { font-size:11px; color:#c7d2fe; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   `;
   shadow.appendChild(style);
 
@@ -143,6 +162,22 @@
       </div>
       <div class="task-list" id="task-list"><div class="loading">Loading tasks...</div></div>
     </div>
+
+    <div class="meeting-bar" id="meeting-bar">
+      <div class="meeting-row">
+        <span class="meeting-badge" id="meeting-badge">📅 In 15m</span>
+        <div class="meeting-info">
+          <div class="meeting-title" id="meeting-title"></div>
+          <div class="meeting-meta" id="meeting-meta"></div>
+        </div>
+        <button class="meeting-link-btn" id="meeting-link-btn">▶ Link &amp; Start</button>
+        <button class="meeting-dismiss" id="meeting-dismiss">× Dismiss</button>
+      </div>
+      <div class="meeting-picker" id="meeting-picker">
+        <div class="meeting-picker-label">Pick a Jira task to track</div>
+        <div class="meeting-picker-list" id="meeting-picker-list"></div>
+      </div>
+    </div>
   `;
   shadow.appendChild(container);
 
@@ -168,6 +203,20 @@
   const btnLog = shadow.getElementById('btn-log');
   const logStatus = shadow.getElementById('log-status');
 
+  const meetingBar = shadow.getElementById('meeting-bar');
+  const meetingBadge = shadow.getElementById('meeting-badge');
+  const meetingTitle = shadow.getElementById('meeting-title');
+  const meetingMeta = shadow.getElementById('meeting-meta');
+  const meetingLinkBtn = shadow.getElementById('meeting-link-btn');
+  const meetingDismiss = shadow.getElementById('meeting-dismiss');
+  const meetingPicker = shadow.getElementById('meeting-picker');
+  const meetingPickerList = shadow.getElementById('meeting-picker-list');
+
+  // cached jira issues for meeting picker (populated by loadTasks)
+  let cachedIssues = [];
+  let dismissedMeetings = new Set(); // track dismissed event ids
+  let meetingCheckInterval = null;
+  let activeMeetingEvent = null;
   let timerInterval = null;
   let currentTimer = null;
   let stopData = null;
@@ -233,6 +282,7 @@
     bubble.style.display = 'none';
     panel.classList.remove('open');
     barLog.classList.remove('visible');
+    meetingBar.classList.remove('visible'); // hide meeting reminder when timer active
     bottomBar.classList.add('visible');
     barTimer.style.display = 'flex';
     activeKeyEl.textContent = timer.issueKey;
@@ -253,6 +303,8 @@
     bubble.style.display = 'block';
     currentTimer = null;
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    // Re-check meeting bar when returning to idle
+    if (flags.calendar && navigator.userAgent.includes('Edg/')) checkUpcomingMeetings();
   }
 
   function showLogForm(data) {
@@ -260,7 +312,7 @@
     barLog.classList.add('visible');
     logIssueKey.textContent = data.issueKey;
     logTime.value = formatForInput(data.elapsed);
-    logDesc.value = '';
+    logDesc.value = data.meetingTitle || '';
     logStatus.textContent = '';
     logStatus.className = 'log-status';
   }
@@ -279,7 +331,28 @@
     chrome.runtime.sendMessage({ type: 'JTP_TIMER_STATUS' }, (timer) => {
       if (chrome.runtime.lastError) return;
       if (timer && timer.running) showRunning(timer);
-      else showIdle();
+      else {
+        showIdle();
+        if (flags.calendar && navigator.userAgent.includes('Edg/')) startMeetingCheck();
+      }
+    });
+
+    // Keep all tabs in sync — react to storage changes made by other tabs
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== 'local' || !changes['jtp-tracker-timer']) return;
+      const timer = changes['jtp-tracker-timer'].newValue;
+      if (!timer) {
+        showIdle();
+        if (flags.calendar && navigator.userAgent.includes('Edg/')) startMeetingCheck();
+      } else if (timer.running) {
+        showRunning(timer);
+      } else if (!timer.running && timer.elapsed != null) {
+        // Another tab stopped the timer — show log form
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+        currentTimer = null;
+        stopData = timer;
+        showLogForm(timer);
+      }
     });
   }
 
@@ -452,45 +525,151 @@
       const jiraBase = await getJiraBaseUrl();
       const data = await jiraFetch(`${jiraBase}/rest/api/3/search/jql`, 'POST', { jql: JQL_FILTER, maxResults: 10, fields: ['summary', 'parent'] });
       const issues = data.issues || [];
+      cachedIssues = issues;
 
       if (!issues.length) {
         taskList.innerHTML = '<div class="empty-state">😴 No tasks match your filter</div>';
-        return;
-      }
-
-      taskList.innerHTML = issues.map(i => {
-        const parent = i.fields.parent;
-        const epicInfo = parent ? `${parent.key} — ${parent.fields?.summary || ''}` : '';
-        return `
-          <div class="task-item" data-key="${i.key}" data-summary="${esc(i.fields.summary)}" data-epic-key="${parent?.key || ''}" data-epic-summary="${esc(parent?.fields?.summary || '')}">
-            <div class="task-info">
-              <div class="task-key">${i.key}</div>
-              <div class="task-summary">${esc(i.fields.summary)}</div>
-              ${epicInfo ? `<div class="task-epic">⚡ ${esc(epicInfo)}</div>` : ''}
+      } else {
+        taskList.innerHTML = issues.map(i => {
+          const parent = i.fields.parent;
+          const epicInfo = parent ? `${parent.key} — ${parent.fields?.summary || ''}` : '';
+          return `
+            <div class="task-item" data-key="${i.key}" data-summary="${esc(i.fields.summary)}" data-epic-key="${parent?.key || ''}" data-epic-summary="${esc(parent?.fields?.summary || '')}">
+              <div class="task-info">
+                <div class="task-key">${i.key}</div>
+                <div class="task-summary">${esc(i.fields.summary)}</div>
+                ${epicInfo ? `<div class="task-epic">⚡ ${esc(epicInfo)}</div>` : ''}
+              </div>
+              <button class="play-btn">▶</button>
             </div>
-            <button class="play-btn">▶</button>
-          </div>
-        `;
-      }).join('');
+          `;
+        }).join('');
 
-      taskList.querySelectorAll('.play-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const item = btn.closest('.task-item');
-          startTimer(item.dataset.key, item.dataset.summary, item.dataset.epicKey, item.dataset.epicSummary);
+        taskList.querySelectorAll('.play-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const item = btn.closest('.task-item');
+            startTimer(item.dataset.key, item.dataset.summary, item.dataset.epicKey, item.dataset.epicSummary);
+          });
         });
-      });
+      }
     } catch (e) {
       taskList.innerHTML = `<div class="empty-state">❌ Failed: ${e.message}</div>`;
     }
+
+    // Cache issues for meeting picker and start meeting check (Edge+calendar only)
+    if (flags.calendar && navigator.userAgent.includes('Edg/')) startMeetingCheck();
   }
 
-  function startTimer(issueKey, summary, epicKey, epicSummary) {
+  // ── Meeting reminder in footer bar ─────────────────────────────────────
+  // Polls every minute; shows bar when a meeting starts within 15 minutes.
+  function startMeetingCheck() {
+    if (meetingCheckInterval) return; // already running
+    fetchAndCheckMeetings();
+    meetingCheckInterval = setInterval(fetchAndCheckMeetings, 60000);
+  }
+
+  let cachedCalEvents = [];
+  let lastCalFetch = 0;
+
+  function fetchAndCheckMeetings() {
+    const now = new Date();
+    // Re-fetch calendar at most once per 10 minutes
+    if (now - lastCalFetch > 10 * 60 * 1000) {
+      lastCalFetch = now.getTime();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+      const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString();
+      const url = `https://outlook.office.com/api/v2.0/me/calendarview?startDateTime=${startOfDay}&endDateTime=${endOfDay}&$orderby=start/dateTime&$top=20`;
+      chrome.runtime.sendMessage({ type: 'JTP_CALENDAR_FETCH', url }, (res) => {
+        if (res?.ok) {
+          cachedCalEvents = res.data.value || [];
+          checkUpcomingMeetings();
+        }
+      });
+    } else {
+      checkUpcomingMeetings();
+    }
+  }
+
+  function checkUpcomingMeetings() {
+    if (currentTimer) return; // don't show while timer is running
+    const now = new Date();
+    const in15 = new Date(now.getTime() + 15 * 60 * 1000);
+
+    // Find the next meeting starting within 15 min (or currently happening)
+    const next = cachedCalEvents.find(ev => {
+      const startRaw = ev.Start?.DateTime || ev.start?.dateTime || '';
+      const endRaw = ev.End?.DateTime || ev.end?.dateTime || '';
+      const start = new Date(startRaw.endsWith('Z') ? startRaw : startRaw + 'Z');
+      const end = new Date(endRaw.endsWith('Z') ? endRaw : endRaw + 'Z');
+      const id = startRaw + (ev.Subject || ev.subject || '');
+      return end > now && start <= in15 && !dismissedMeetings.has(id);
+    });
+
+    if (!next) {
+      meetingBar.classList.remove('visible');
+      activeMeetingEvent = null;
+      return;
+    }
+
+    const startRaw = next.Start?.DateTime || next.start?.dateTime || '';
+    const start = new Date(startRaw.endsWith('Z') ? startRaw : startRaw + 'Z');
+    const subject = next.Subject || next.subject || '(No subject)';
+    const minsUntil = Math.round((start - now) / 60000);
+    const timeStr = start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const isNow = start <= now;
+
+    activeMeetingEvent = next;
+    meetingTitle.textContent = subject;
+    meetingMeta.textContent = `${timeStr} · ${isNow ? 'Happening now' : `Starts in ${minsUntil}m`}`;
+    meetingBadge.textContent = isNow ? '\uD83D\uDFE2 Now' : `\uD83D\uDCC5 In ${minsUntil}m`;
+    meetingBar.classList.add('visible');
+
+    // Populate task picker
+    meetingPickerList.innerHTML = cachedIssues.length
+      ? cachedIssues.map(i => `
+          <div class="mpk-item"
+            data-key="${i.key}"
+            data-summary="${esc(i.fields.summary)}"
+            data-epic-key="${i.fields.parent?.key || ''}"
+            data-epic-summary="${esc(i.fields.parent?.fields?.summary || '')}"
+            data-meeting="${esc(subject)}">
+            <span class="mpk-key">${i.key}</span>
+            <span class="mpk-sum">${esc(i.fields.summary)}</span>
+          </div>`).join('')
+      : '<span style="font-size:11px;color:#a5b4fc">Open widget first to load tasks</span>';
+
+    meetingPickerList.querySelectorAll('.mpk-item').forEach(item => {
+      item.addEventListener('click', () => {
+        startTimer(item.dataset.key, item.dataset.summary, item.dataset.epicKey, item.dataset.epicSummary, item.dataset.meeting);
+        meetingPicker.classList.remove('open');
+      });
+    });
+  }
+
+  meetingLinkBtn.addEventListener('click', () => {
+    meetingPicker.classList.toggle('open');
+  });
+
+  meetingDismiss.addEventListener('click', () => {
+    if (activeMeetingEvent) {
+      const startRaw = activeMeetingEvent.Start?.DateTime || activeMeetingEvent.start?.dateTime || '';
+      const subject = activeMeetingEvent.Subject || activeMeetingEvent.subject || '';
+      dismissedMeetings.add(startRaw + subject);
+    }
+    meetingBar.classList.remove('visible');
+    meetingPicker.classList.remove('open');
+    activeMeetingEvent = null;
+  });
+
+
+  function startTimer(issueKey, summary, epicKey, epicSummary, meetingTitle = '') {
     if (!isExtensionValid()) return;
-    chrome.runtime.sendMessage({ type: 'JTP_TIMER_START', issueKey, summary, epicKey, epicSummary }, (res) => {
+    chrome.runtime.sendMessage({ type: 'JTP_TIMER_START', issueKey, summary, epicKey, epicSummary, meetingTitle }, (res) => {
       if (chrome.runtime.lastError) return;
       if (res && res.ok) {
-        showRunning({ issueKey, summary, epicKey, epicSummary, startTime: Date.now(), running: true });
+        panel.classList.remove('open');
+        showRunning({ issueKey, summary, epicKey, epicSummary, meetingTitle, startTime: Date.now(), running: true });
       }
     });
   }

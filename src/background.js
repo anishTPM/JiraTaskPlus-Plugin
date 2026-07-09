@@ -1,8 +1,12 @@
 import { initTrackerBackground } from './tracker/tracker-background.js';
+import { initCalendarBackground } from './calendar/calendar-background.js';
 
 const FOCUS_KEY = 'jtp-focus-mode';
 
 // ── Feature Flags ─────────────────────────────────────────────────────────
+// Calendar listener always active (lightweight proxy, needed by settings page)
+initCalendarBackground();
+
 chrome.storage.local.get('jtp-features', (res) => {
   const features = res['jtp-features'] || {};
   if (features.tracker) initTrackerBackground();

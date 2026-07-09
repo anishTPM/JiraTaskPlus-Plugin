@@ -11,10 +11,12 @@ A Chrome/Edge extension for bulk creating Jira tasks and tracking time with Temp
 - **CSV Import** — Import tasks from CSV with downloadable sample template
 - **Board Memory** — Remembers selected board per project
 - **Multi-environment** — Auto-detects environment based on Jira instance URL
-- **Admin Panel** — Sidebar-based settings with Org Configs, Analytics, and Tracker pages
+- **Admin Panel** — Sidebar-based settings with Org Configs, Analytics, Tracker, and Calendar pages
 - **Analytics Dashboard** — Track tasks created, time saved, and sync stats to Confluence
 - **⏱️ Floating Time Tracker** — Persistent draggable widget on all pages with Tempo Cloud integration
 - **Tempo Worklog** — Play/Stop timer, edit time & description, log directly to Tempo
+- **📅 Calendar Integration** — Outlook calendar meeting reminders in footer bar with one-click timer start (Edge only)
+- **Cross-tab Sync** — Timer state syncs instantly across all open tabs
 
 ## Time Tracker
 
@@ -25,14 +27,25 @@ A floating bubble widget that lives on every browser page:
 3. **Active Timer** — Full-width bottom bar with live timer, task details, epic badge, and stop button.
 4. **Collapsible** — `«` button collapses bar to a compact pill; `»` expands it back.
 5. **Log Time** — On stop, inline form appears in the bar to edit time, add description, and log to Tempo.
+6. **Cross-tab** — Starting or stopping in any tab instantly updates all other open tabs.
 
-### Setup
+## Calendar Integration (Edge only)
 
-1. Open Admin Panel → Tracker tab
-2. Enable the tracker toggle
-3. Paste your Tempo API token (generate from Tempo → Settings → API Integration)
-4. Set your JQL filter (default: `assignee = currentUser() AND sprint in openSprints() AND statusCategory != Done`)
-5. Save → reload any tab
+A footer meeting reminder bar that appears automatically:
+
+1. Polls every minute for meetings starting within **15 minutes**
+2. Shows meeting title, countdown, and ▶ **Link & Start** button
+3. Clicking **Link & Start** opens an inline Jira task picker — select a task to start the timer with the meeting title pre-filled as the log description
+4. **× Dismiss** hides the reminder for that specific meeting
+
+### Calendar Setup
+
+1. Open Admin Panel → Calendar tab (Microsoft Edge only)
+2. Enable the calendar toggle
+3. Save → reload any tab
+4. Make sure you are logged into Outlook in Edge
+
+> **Note:** Calendar integration requires Microsoft Edge. Chrome encrypts authentication tokens in a way that makes them inaccessible to extensions.
 
 ## Installation
 

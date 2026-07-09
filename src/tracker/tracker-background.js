@@ -19,6 +19,7 @@ export function initTrackerBackground() {
         summary: msg.summary,
         epicKey: msg.epicKey || '',
         epicSummary: msg.epicSummary || '',
+        meetingTitle: msg.meetingTitle || '',
         startTime: Date.now(),
         running: true,
       };
@@ -36,7 +37,7 @@ export function initTrackerBackground() {
         const elapsed = Math.floor((Date.now() - timer.startTime) / 1000);
         chrome.alarms.clear(ALARM_NAME);
         chrome.storage.local.set({ [TIMER_KEY]: { ...timer, running: false, elapsed } }, () => {
-          sendResponse({ ok: true, elapsed, issueKey: timer.issueKey, summary: timer.summary, startTime: timer.startTime });
+          sendResponse({ ok: true, elapsed, issueKey: timer.issueKey, summary: timer.summary, startTime: timer.startTime, meetingTitle: timer.meetingTitle || '' });
         });
       });
       return true;

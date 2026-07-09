@@ -9,6 +9,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
     document.getElementById(`page-${item.dataset.page}`).classList.add('active');
     if (item.dataset.page === 'analytics') loadAnalytics();
     if (item.dataset.page === 'tracker') loadTrackerSettings();
+    if (item.dataset.page === 'calendar') loadCalendarSettings();
   });
 });
 
@@ -185,14 +186,119 @@ document.getElementById('save-tracker').addEventListener('click', () => {
   const jql = document.getElementById('tracker-jql').value.trim();
   const jiraBase = document.getElementById('tracker-jira-base').value.trim();
 
-  chrome.storage.local.set({
-    'jtp-features': { tracker: enabled },
-    'jtp-tempo-token': token,
-    'jtp-tracker-jql': jql,
-    'jtp-tracker-jira-base': jiraBase,
-  }, () => {
-    const status = document.getElementById('tracker-save-status');
-    status.textContent = '✅ Saved! Reload browser tabs for changes to take effect.';
-    setTimeout(() => { status.textContent = ''; }, 4000);
+  chrome.storage.local.get('jtp-features', (res) => {
+    const features = res['jtp-features'] || {};
+    features.tracker = enabled;
+    chrome.storage.local.set({
+      'jtp-features': features,
+      'jtp-tempo-token': token,
+      'jtp-tracker-jql': jql,
+      'jtp-tracker-jira-base': jiraBase,
+    }, () => {
+      const status = document.getElementById('tracker-save-status');
+      status.textContent = '✅ Saved! Reload browser tabs for changes to take effect.';
+      setTimeout(() => { status.textContent = ''; }, 4000);
+    });
+  });
+});
+
+// ── Calendar Settings ───────────────────────────────────────────────────────
+const isEdge = navigator.userAgent.includes('Edg/');
+
+function loadCalendarSettings() {
+  if (!isEdge) {
+    document.getElementById('calendar-edge-notice').style.display = 'block';
+    document.getElementById('calendar-controls').style.opacity = '0.4';
+    document.getElementById('calendar-controls').style.pointerEvents = 'none';
+    return;
+  }
+  chrome.storage.local.get('jtp-features', (res) => {
+    const features = res['jtp-features'] || {};
+    document.getElementById('calendar-enabled').checked = !!features.calendar;
+  });
+}
+
+document.getElementById('save-calendar').addEventListener('click', () => {
+  const enabled = document.getElementById('calendar-enabled').checked;
+  chrome.storage.local.get('jtp-features', (res) => {
+    const features = res['jtp-features'] || {};
+    features.calendar = enabled;
+    chrome.storage.local.set({ 'jtp-features': features }, () => {
+      const status = document.getElementById('calendar-save-status');
+      status.textContent = '✅ Saved! Reload browser tabs for changes to take effect.';
+      setTimeout(() => { status.textContent = ''; }, 4000);
+    });
+  });
+});
+
+document.getElementById('debug-calendar').addEventListener('click', async () => {
+  const statusEl = document.getElementById('calendar-test-status');
+  statusEl.textContent = '⏳ Reading Outlook localStorage...';
+  statusEl.style.color = '#1e40af';
+  chrome.runtime.sendMessage({ type: 'JTP_CALENDAR_DEBUG' }, (res) => {
+    if (chrome.runtime.lastError || res?.error) {
+      statusEl.textContent = `❌ ${res?.error || chrome.runtime.lastError?.message}`;
+      statusEl.style.color = '#991b1b';
+      return;
+    }
+    // Log each key on its own line so nothing is truncated
+    console.log('[JTP Debug] msal.3| entries:');
+    res.forEach(e => console.log(JSON.stringify(e)));
+    statusEl.textContent = `🔍 ${res.length} msal.3| keys logged to console (F12 → expand each line).`;
+    statusEl.style.color = '#92400e';
+  });
+});
+
+document.getElementById('test-calendar').addEventListener('click', async () => {
+  const statusEl = document.getElementById('calendar-test-status');
+  const resultsEl = document.getElementById('calendar-results');
+  const bodyEl = document.getElementById('calendar-events-body');
+
+  statusEl.textContent = '⏳ Fetching...';
+  statusEl.style.color = '#1e40af';
+  resultsEl.style.display = 'none';
+
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString();
+
+  const url = `https://outlook.office.com/api/v2.0/me/calendarview?startDateTime=${startOfDay}&endDateTime=${endOfDay}&$orderby=start/dateTime&$top=20`;
+
+  chrome.runtime.sendMessage({ type: 'JTP_CALENDAR_FETCH', url }, (res) => {
+    if (chrome.runtime.lastError) {
+      statusEl.textContent = `❌ Extension error: ${chrome.runtime.lastError.message}`;
+      statusEl.style.color = '#991b1b';
+      return;
+    }
+    if (!res || !res.ok) {
+      statusEl.textContent = `❌ ${res?.error || 'Failed to fetch. Are you logged into Outlook in this browser?'}`;
+      statusEl.style.color = '#991b1b';
+      return;
+    }
+
+    // Handle both REST API format and OWA service.svc format
+    const events = res.data.value || res.data.CalendarEvents || res.data.CalendarView || [];
+    statusEl.textContent = `✅ Found ${events.length} event(s) today`;
+    statusEl.style.color = '#16a34a';
+
+    if (events.length === 0) {
+      bodyEl.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#9ca3af">No events today</td></tr>';
+    } else {
+      bodyEl.innerHTML = events.map(ev => {
+        // Support REST API (Start.DateTime), Graph API (start.dateTime), and OWA (Start/End as ISO strings)
+        const startRaw = ev.Start?.DateTime || ev.start?.dateTime || ev.Start || '';
+        const endRaw = ev.End?.DateTime || ev.end?.dateTime || ev.End || '';
+        const subject = ev.Subject || ev.subject || '(No subject)';
+        const start = new Date(startRaw.endsWith('Z') ? startRaw : startRaw + 'Z');
+        const end = new Date(endRaw.endsWith('Z') ? endRaw : endRaw + 'Z');
+        const durMin = Math.round((end - start) / 60000);
+        const timeStr = start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const isPast = end < now;
+        const isNow = start <= now && end >= now;
+        const status = isNow ? '🟢 Now' : isPast ? '✅ Done' : '🔵 Upcoming';
+        return `<tr><td>${timeStr}</td><td>${escHtml(subject)}</td><td>${durMin}m</td><td>${status}</td></tr>`;
+      }).join('');
+    }
+    resultsEl.style.display = 'block';
   });
 });

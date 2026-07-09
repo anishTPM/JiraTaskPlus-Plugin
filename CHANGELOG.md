@@ -1,6 +1,18 @@
 # Changelog
 
-## [1.3.0] - 2025-01-XX
+## [1.4.0] - 2025-07-10
+
+### Added
+- **Outlook Calendar Integration** (Microsoft Edge only) — fetches today's events using MSAL tokens from Outlook's localStorage
+- **Meeting reminder footer bar** — automatically appears when a meeting starts within 15 minutes; shows title, countdown, and dismiss button
+- **Link & Start from meeting** — inline Jira task picker in the footer bar lets you link a calendar event to a task and start the timer in one click; meeting title pre-filled as log description
+- **Cross-tab timer sync** — `chrome.storage.onChanged` listener keeps all open tabs in sync instantly; starting/stopping in one tab reflects everywhere without refresh
+- **Calendar settings page** — Admin Panel → Calendar tab with Edge-only gate, feature toggle, test connection, and debug tools
+- **Calendar relay content script** — `calendar-relay.js` bridges injected scripts to service worker on Outlook domains
+
+### Changed
+- Calendar feature disabled with informational banner on non-Edge browsers
+- Timer state now persists and restores correctly across page refreshes and new tabs
 
 ### Added
 - Floating time tracker widget (Shadow DOM, all pages, feature-flagged)

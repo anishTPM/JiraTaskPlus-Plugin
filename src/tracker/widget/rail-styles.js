@@ -55,6 +55,9 @@ export const RAIL_CSS = `
   /* ── Task Row (inline horizontal scroll inside rail) ────────────────────── */
   .task-row { display:none; border-top:1px solid #334155; padding:8px 20px; overflow:hidden; }
   .task-row.visible { display:block; }
+  .task-search { width:100%; border:1px solid #334155; border-radius:8px; padding:7px 12px; font-size:13px; outline:none; background:#0f172a; color:#f1f5f9; margin-bottom:8px; transition:border-color 0.15s; }
+  .task-search:focus { border-color:#6366f1; }
+  .task-search::placeholder { color:#475569; }
   .task-row-list { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; scrollbar-width:thin; scrollbar-color:#475569 transparent; }
   .task-row-list::-webkit-scrollbar { height:4px; }
   .task-row-list::-webkit-scrollbar-track { background:transparent; }
@@ -65,6 +68,8 @@ export const RAIL_CSS = `
   .task-chip .chip-key { font-size:10px; font-weight:700; color:#818cf8; }
   .task-chip .chip-summary { font-size:12px; color:#e2e8f0; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
   .task-chip .chip-epic { font-size:9px; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
+  .task-chip.recent { border-color:#334155; background:#162032; }
+  .task-chip.recent .chip-key::before { content:'\u{1F551} '; font-size:8px; }
   .task-chip:hover { border-color:#6366f1; background:#0f172a; cursor:pointer; }
   .task-chip:hover .chip-key { color:#a5b4fc; }
   .task-chip:hover .chip-summary { color:#fff; }

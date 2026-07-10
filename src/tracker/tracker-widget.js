@@ -4,7 +4,7 @@
 
 import { RAIL_CSS } from './widget/rail-styles.js';
 import { RAIL_HTML } from './widget/rail-dom.js';
-import { isExtensionValid, fetchTasks } from './widget/task-service.js';
+import { isExtensionValid, fetchTasks, getRecentTasks, pushRecentTask } from './widget/task-service.js';
 import { createTimerController } from './widget/timer-controller.js';
 import { createMeetingController } from './widget/meeting-controller.js';
 import { createLogController } from './widget/log-controller.js';
@@ -54,6 +54,7 @@ import { createLogController } from './widget/log-controller.js';
     btnLog: shadow.getElementById('btn-log'),
     logStatus: shadow.getElementById('log-status'),
     taskRow: shadow.getElementById('task-row'),
+    taskSearch: shadow.getElementById('task-search'),
     taskList: shadow.getElementById('task-list'),
     meetingChip: shadow.getElementById('meeting-chip'),
     meetingBadge: shadow.getElementById('meeting-badge'),
@@ -68,15 +69,12 @@ import { createLogController } from './widget/log-controller.js';
   // ── Initialize Controllers ──────────────────────────────────────────────
   const timerCtrl = createTimerController(refs);
   const logCtrl = createLogController(refs, timerCtrl, TEMPO_TOKEN);
-
-  let cachedIssues = [];
-  let pendingMeetingLink = null; // meeting title to link when task is picked
+  let pendingMeetingLink = null;
   const meetingCtrl = createMeetingController(refs, timerCtrl);
 
   // ── Wire timer state changes ────────────────────────────────────────────
   timerCtrl.onStateChange = (state, data) => {
     if (state === 'running') {
-      // Keep meeting chip visible but in compact mode (no buttons, just info)
       refs.meetingChip.classList.add('compact');
       refs.miniPill.classList.remove('visible');
       refs.rail.classList.remove('hidden');
@@ -106,7 +104,7 @@ import { createLogController } from './widget/log-controller.js';
   refs.btnLog.addEventListener('click', () => logCtrl.submitLog());
   refs.btnDiscard.addEventListener('click', () => logCtrl.discard());
 
-  // Meeting chip actions — Link opens task row for linking
+  // Meeting chip — Link opens task row for linking
   refs.meetingLinkBtn.addEventListener('click', () => {
     pendingMeetingLink = refs.meetingTitle.textContent || '';
     refs.taskRow.classList.add('visible');
@@ -115,13 +113,11 @@ import { createLogController } from './widget/log-controller.js';
   });
   refs.meetingDismiss.addEventListener('click', () => meetingCtrl.dismiss());
 
-  // Rail hide → show mini pill
+  // Rail hide → mini pill
   refs.railHide.addEventListener('click', () => {
     refs.rail.classList.add('hidden');
     refs.miniPill.classList.add('visible');
   });
-
-  // Mini pill → restore rail
   refs.miniPill.addEventListener('click', () => {
     refs.miniPill.classList.remove('visible');
     refs.rail.classList.remove('hidden');
@@ -132,52 +128,106 @@ import { createLogController } from './widget/log-controller.js';
     timerCtrl.handleStorageChange(changes, area);
   });
 
-  // ── Task Loading ────────────────────────────────────────────────────────
+  // ── Task Loading (search-first, recent-aware) ───────────────────────────
   function esc(str) {
     return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  async function loadTasks() {
-    refs.taskList.innerHTML = '<span class="task-row-msg">\u23f3 Loading...</span>';
-    try {
-      const issues = await fetchTasks(JQL_FILTER);
-      cachedIssues = issues;
+  let allIssues = [];
+  let recentTasks = [];
 
-      if (!issues.length) {
-        refs.taskList.innerHTML = '<span class="task-row-msg">\ud83d\ude34 No tasks match your filter</span>';
-      } else {
-        refs.taskList.innerHTML = issues.map(i => {
-          const parent = i.fields.parent;
-          const epicName = parent?.fields?.summary || '';
-          const epicLabel = epicName ? `(${epicName.length > 22 ? epicName.slice(0, 22) + '\u2026' : epicName})` : '';
-          return `
-            <div class="task-chip" data-key="${i.key}" data-summary="${esc(i.fields.summary)}" data-epic-key="${parent?.key || ''}" data-epic-summary="${esc(parent?.fields?.summary || '')}">
-              <div class="chip-info">
-                <div class="chip-key">${i.key}</div>
-                <div class="chip-summary">${esc(i.fields.summary)}</div>
-                ${epicLabel ? `<div class="chip-epic">${esc(epicLabel)}</div>` : ''}
-              </div>
-            </div>
-          `;
-        }).join('');
+  function renderChips(issues, recentKeys) {
+    if (!issues.length) {
+      refs.taskList.innerHTML = '<span class="task-row-msg">No matches</span>';
+      return;
+    }
+    refs.taskList.innerHTML = issues.map(i => {
+      const parent = i.fields?.parent || null;
+      const key = i.key;
+      const summary = i.fields?.summary || i.summary || '';
+      const epicName = parent?.fields?.summary || i.epicSummary || '';
+      const epicLabel = epicName ? `(${epicName.length > 22 ? epicName.slice(0, 22) + '\u2026' : epicName})` : '';
+      const isRecent = recentKeys.has(key);
+      return `
+        <div class="task-chip${isRecent ? ' recent' : ''}" data-key="${key}" data-summary="${esc(summary)}" data-epic-key="${parent?.key || i.epicKey || ''}" data-epic-summary="${esc(epicName)}">
+          <div class="chip-info">
+            <div class="chip-key">${key}</div>
+            <div class="chip-summary">${esc(summary)}</div>
+            ${epicLabel ? `<div class="chip-epic">${esc(epicLabel)}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
 
-        refs.taskList.querySelectorAll('.task-chip').forEach(chip => {
-          chip.addEventListener('click', () => {
-            const meetingTitle = pendingMeetingLink || '';
-            pendingMeetingLink = null;
-            timerCtrl.startTimer(chip.dataset.key, chip.dataset.summary, chip.dataset.epicKey, chip.dataset.epicSummary, meetingTitle);
-            refs.taskRow.classList.remove('visible');
-            refs.railBrand.classList.remove('active');
-          });
-        });
-      }
-    } catch (e) {
-      refs.taskList.innerHTML = `<span class="task-row-msg">\u274c ${e.message}</span>`;
+    refs.taskList.querySelectorAll('.task-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const meetingTitle = pendingMeetingLink || '';
+        pendingMeetingLink = null;
+        const key = chip.dataset.key;
+        const summary = chip.dataset.summary;
+        const epicKey = chip.dataset.epicKey;
+        const epicSummary = chip.dataset.epicSummary;
+        pushRecentTask({ key, summary, epicKey, epicSummary });
+        timerCtrl.startTimer(key, summary, epicKey, epicSummary, meetingTitle);
+        refs.taskRow.classList.remove('visible');
+        refs.railBrand.classList.remove('active');
+        refs.taskSearch.value = '';
+      });
+    });
+  }
+
+  function filterAndRender(query) {
+    const q = query.toLowerCase().trim();
+    const recentKeys = new Set(recentTasks.map(r => r.key));
+
+    if (!q) {
+      // Show recent first, then fill remaining up to 8
+      const recentIssues = recentTasks
+        .map(r => allIssues.find(i => i.key === r.key) || { key: r.key, fields: { summary: r.summary, parent: r.epicKey ? { key: r.epicKey, fields: { summary: r.epicSummary } } : null }, epicKey: r.epicKey, epicSummary: r.epicSummary })
+        .filter(Boolean);
+      const rest = allIssues.filter(i => !recentKeys.has(i.key)).slice(0, 8 - recentIssues.length);
+      renderChips([...recentIssues, ...rest], recentKeys);
+    } else {
+      const filtered = allIssues.filter(i => {
+        const k = i.key.toLowerCase();
+        const s = (i.fields?.summary || '').toLowerCase();
+        return k.includes(q) || s.includes(q);
+      }).slice(0, 10);
+      renderChips(filtered, recentKeys);
     }
   }
 
+  async function loadTasks() {
+    recentTasks = await getRecentTasks();
+    const recentKeys = new Set(recentTasks.map(r => r.key));
+
+    // Show recent instantly while API loads
+    if (recentTasks.length && !allIssues.length) {
+      const recentAsIssues = recentTasks.map(r => ({ key: r.key, fields: { summary: r.summary, parent: r.epicKey ? { key: r.epicKey, fields: { summary: r.epicSummary } } : null }, epicKey: r.epicKey, epicSummary: r.epicSummary }));
+      renderChips(recentAsIssues, recentKeys);
+    }
+
+    // Fetch from API once, then cache
+    if (!allIssues.length) {
+      if (!recentTasks.length) refs.taskList.innerHTML = '<span class="task-row-msg">\u23f3 Loading...</span>';
+      try {
+        allIssues = await fetchTasks(JQL_FILTER);
+      } catch (e) {
+        if (!recentTasks.length) refs.taskList.innerHTML = `<span class="task-row-msg">\u274c ${e.message}</span>`;
+        return;
+      }
+    }
+
+    filterAndRender(refs.taskSearch.value);
+    refs.taskSearch.focus();
+  }
+
+  // Search — filter on every keystroke
+  refs.taskSearch.addEventListener('input', () => {
+    filterAndRender(refs.taskSearch.value);
+  });
+
   // ── Init ─────────────────────────────────────────────────────────────────
-  // Start calendar polling first so events are cached before timer state resolves
   if (flags.calendar && navigator.userAgent.includes('Edg/')) meetingCtrl.start();
   timerCtrl.checkInitialState();
 })();

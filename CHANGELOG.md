@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.5.0] - 2025-07-10
+
+### Added
+- **Unified Footer Rail** — single persistent footer bar replaces floating bubble + separate timer bar + meeting bar; always visible at 44px, expands contextually
+- **Search-first task picker** — inline search input filters tasks instantly by key or summary; no scrolling through long lists
+- **Recent tasks** — last 5 tasks you logged time against appear first (with 🕑 indicator), loaded instantly from storage before API responds
+- **Smart task display** — shows recent + top results (8 chips) by default; type to filter all 30 cached tasks client-side
+- **Meeting Link → Task Row** — clicking Link on a meeting chip opens the task row; selecting a task starts timer with meeting title pre-filled
+- **Calendar event filters** — Settings → Calendar: skip all-day events toggle + keyword blocklist (OOO, Holiday, etc.)
+- **Next event always visible** — meeting chip shows next upcoming event in compact mode even during active timer
+- **Mini pill** — minimize the rail to a small pill in bottom-right corner; click to restore
+
+### Changed
+- **Modular architecture (SOLID)** — tracker widget split into 6 modules: `rail-styles.js`, `rail-dom.js`, `task-service.js`, `timer-controller.js`, `meeting-controller.js`, `log-controller.js`
+- **Task chips redesign** — no green play button; entire chip is clickable with hover effect; epic name shown in brackets on third line
+- **API fetch capped at 30** — fetched once per session, cached in memory; prevents excessive API calls for large JQL filters
+- **Task row inline** — tasks render as horizontal scrollable chips inside the footer (no popup/drawer sliding from anywhere)
+- **Log textarea** — hidden scrollbars for cleaner appearance
+- **Removed separate meeting picker dropdown** — Link button reuses the task row directly
+
+### Fixed
+- Calendar events not showing on initial load (race condition: polling now starts before timer state check)
+- Meeting chip not visible when no meeting within 15min (now shows next future event passively)
+
 ## [1.4.0] - 2025-07-10
 
 ### Added

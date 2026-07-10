@@ -1,5 +1,9 @@
-// Single Responsibility: Jira API communication and task fetching.
+// Single Responsibility: Jira API communication, task fetching, and recent tasks tracking.
 // Dependency Inversion: Depends on abstract messaging (chrome.runtime.sendMessage).
+
+const MAX_FETCH = 30;
+const MAX_RECENT = 5;
+const RECENT_KEY = 'jtp-recent-tasks';
 
 export function isExtensionValid() {
   try { return !!chrome.runtime?.id; } catch (e) { return false; }
@@ -29,8 +33,27 @@ export async function fetchTasks(jqlFilter) {
   const jiraBase = await getJiraBaseUrl();
   const data = await jiraFetch(`${jiraBase}/rest/api/3/search/jql`, 'POST', {
     jql: jqlFilter,
-    maxResults: 15,
+    maxResults: MAX_FETCH,
     fields: ['summary', 'parent']
   });
   return data.issues || [];
+}
+
+export async function getRecentTasks() {
+  return new Promise(r => {
+    chrome.storage.local.get(RECENT_KEY, (res) => {
+      r(res[RECENT_KEY] || []);
+    });
+  });
+}
+
+export function pushRecentTask(issue) {
+  chrome.storage.local.get(RECENT_KEY, (res) => {
+    let recent = res[RECENT_KEY] || [];
+    // Remove if already exists, then prepend
+    recent = recent.filter(r => r.key !== issue.key);
+    recent.unshift({ key: issue.key, summary: issue.summary, epicKey: issue.epicKey || '', epicSummary: issue.epicSummary || '' });
+    if (recent.length > MAX_RECENT) recent = recent.slice(0, MAX_RECENT);
+    chrome.storage.local.set({ [RECENT_KEY]: recent });
+  });
 }

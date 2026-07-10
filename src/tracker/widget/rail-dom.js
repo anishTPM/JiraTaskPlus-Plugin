@@ -38,8 +38,9 @@ export const RAIL_HTML = `
       <button class="rail-hide" id="rail-hide" title="Minimize">\u2304</button>
     </div>
 
-    <!-- Task row (inline, horizontal scroll) -->
+    <!-- Task row (inline, search + chips) -->
     <div class="task-row" id="task-row">
+      <input class="task-search" id="task-search" type="text" placeholder="\u{1F50D} Type key or summary to filter..." autocomplete="off" />
       <div class="task-row-list" id="task-list"></div>
     </div>
 

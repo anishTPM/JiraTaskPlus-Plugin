@@ -13,21 +13,24 @@ A Chrome/Edge extension for bulk creating Jira tasks and tracking time with Temp
 - **Multi-environment** — Auto-detects environment based on Jira instance URL
 - **Admin Panel** — Sidebar-based settings with Org Configs, Analytics, Tracker, and Calendar pages
 - **Analytics Dashboard** — Track tasks created, time saved, and sync stats to Confluence
-- **⏱️ Floating Time Tracker** — Persistent draggable widget on all pages with Tempo Cloud integration
-- **Tempo Worklog** — Play/Stop timer, edit time & description, log directly to Tempo
-- **📅 Calendar Integration** — Outlook calendar meeting reminders in footer bar with one-click timer start (Edge only)
+- **⏱️ Unified Footer Rail** — Persistent footer bar on all pages with search-first task picker and Tempo integration
+- **Search & Recent Tasks** — Instant client-side search + last 5 used tasks shown first
+- **Tempo Worklog** — Stop timer, edit time & description, log directly to Tempo
+- **📅 Calendar Integration** — Outlook calendar meeting reminders with one-click task linking (Edge only)
+- **Event Filters** — Skip all-day events and keyword blocklist for calendar reminders
 - **Cross-tab Sync** — Timer state syncs instantly across all open tabs
 
 ## Time Tracker
 
-A floating bubble widget that lives on every browser page:
+A unified footer rail that lives on every browser page:
 
-1. **Idle** — Draggable ⏱️ icon (position remembered). Click to open task list.
-2. **Task List** — Shows up to 10 tasks from your configurable JQL filter with epic info.
-3. **Active Timer** — Full-width bottom bar with live timer, task details, epic badge, and stop button.
-4. **Collapsible** — `«` button collapses bar to a compact pill; `»` expands it back.
-5. **Log Time** — On stop, inline form appears in the bar to edit time, add description, and log to Tempo.
+1. **Idle** — 44px footer bar with ⏱️ JTP brand anchor. Click to open task picker.
+2. **Task Picker** — Inline search input + horizontal task chips. Recent tasks (last 5) appear first instantly. Type to filter by key or summary.
+3. **Active Timer** — Footer expands to show live timer, task key, summary, epic badge, and stop button.
+4. **Log Time** — On stop, inline form appears in the footer to edit time, add description, and log to Tempo.
+5. **Mini Pill** — Minimize the rail to a compact pill; click to restore.
 6. **Cross-tab** — Starting or stopping in any tab instantly updates all other open tabs.
+7. **Meeting Link** — Click Link on a meeting chip to open task picker; selected task starts timer with meeting title pre-filled.
 
 ## Calendar Integration (Edge only)
 
@@ -85,13 +88,23 @@ The extension auto-detects which environment to use based on the current page UR
 ├── src/
 │   ├── api/jira.js          # Jira REST API client
 │   ├── assets/              # Icons and compiled CSS
+│   ├── calendar/            # Outlook calendar integration
+│   │   ├── calendar-background.js  # Token extraction + fetch proxy
+│   │   └── calendar-relay.js       # Content script bridge
 │   ├── modal/               # Bulk task creation modal UI
 │   ├── popup/               # Extension popup
-│   ├── settings/            # Admin panel (Org Configs, Analytics, Tracker)
-│   ├── tracker/             # Floating time tracker (feature-flagged)
-│   │   ├── tracker-widget.js    # Shadow DOM widget (all pages)
-│   │   ├── tracker-background.js # Timer + API proxy in service worker
-│   │   └── tempo-api.js         # Tempo Cloud API client
+│   ├── settings/            # Admin panel (Org Configs, Analytics, Tracker, Calendar)
+│   ├── tracker/             # Time tracker (feature-flagged)
+│   │   ├── tracker-widget.js       # Orchestrator (entry point)
+│   │   ├── tracker-background.js   # Timer + API proxy in service worker
+│   │   ├── tempo-api.js            # Tempo Cloud API client
+│   │   └── widget/                 # Modular SOLID architecture
+│   │       ├── rail-styles.js      # CSS (Single Responsibility)
+│   │       ├── rail-dom.js         # DOM template
+│   │       ├── task-service.js     # Jira API + recent tasks
+│   │       ├── timer-controller.js # Timer state machine
+│   │       ├── meeting-controller.js # Calendar polling + filtering
+│   │       └── log-controller.js   # Worklog form + Tempo submit
 │   ├── background.js        # Service worker
 │   ├── content.js           # Content script (injected into Jira pages)
 │   ├── org-config.js        # Organization & environment config

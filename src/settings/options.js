@@ -212,18 +212,28 @@ function loadCalendarSettings() {
     document.getElementById('calendar-controls').style.pointerEvents = 'none';
     return;
   }
-  chrome.storage.local.get('jtp-features', (res) => {
+  chrome.storage.local.get(['jtp-features', 'jtp-calendar-filters'], (res) => {
     const features = res['jtp-features'] || {};
+    const filters = res['jtp-calendar-filters'] || { skipAllDay: true, blocklist: [] };
     document.getElementById('calendar-enabled').checked = !!features.calendar;
+    document.getElementById('filter-allday').checked = filters.skipAllDay !== false;
+    document.getElementById('filter-blocklist').value = (filters.blocklist || []).join(', ');
   });
 }
 
 document.getElementById('save-calendar').addEventListener('click', () => {
   const enabled = document.getElementById('calendar-enabled').checked;
+  const skipAllDay = document.getElementById('filter-allday').checked;
+  const blocklistRaw = document.getElementById('filter-blocklist').value;
+  const blocklist = blocklistRaw.split(',').map(s => s.trim()).filter(Boolean);
+
   chrome.storage.local.get('jtp-features', (res) => {
     const features = res['jtp-features'] || {};
     features.calendar = enabled;
-    chrome.storage.local.set({ 'jtp-features': features }, () => {
+    chrome.storage.local.set({
+      'jtp-features': features,
+      'jtp-calendar-filters': { skipAllDay, blocklist }
+    }, () => {
       const status = document.getElementById('calendar-save-status');
       status.textContent = '✅ Saved! Reload browser tabs for changes to take effect.';
       setTimeout(() => { status.textContent = ''; }, 4000);
@@ -278,13 +288,25 @@ document.getElementById('test-calendar').addEventListener('click', async () => {
 
     // Handle both REST API format and OWA service.svc format
     const events = res.data.value || res.data.CalendarEvents || res.data.CalendarView || [];
-    statusEl.textContent = `✅ Found ${events.length} event(s) today`;
     statusEl.style.color = '#16a34a';
 
-    if (events.length === 0) {
-      bodyEl.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#9ca3af">No events today</td></tr>';
+    // Apply filters to test view
+    const filterAllDay = document.getElementById('filter-allday').checked;
+    const blocklistVal = document.getElementById('filter-blocklist').value;
+    const blockWords = blocklistVal.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    const filtered = events.filter(ev => {
+      if (filterAllDay && (ev.IsAllDay || ev.isAllDay)) return false;
+      const subj = (ev.Subject || ev.subject || '').toLowerCase();
+      if (blockWords.some(kw => subj.includes(kw))) return false;
+      return true;
+    });
+
+    statusEl.textContent = `✅ Found ${events.length} event(s) today (${filtered.length} after filters)`;
+
+    if (filtered.length === 0) {
+      bodyEl.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#9ca3af">No events after filtering</td></tr>';
     } else {
-      bodyEl.innerHTML = events.map(ev => {
+      bodyEl.innerHTML = filtered.map(ev => {
         // Support REST API (Start.DateTime), Graph API (start.dateTime), and OWA (Start/End as ISO strings)
         const startRaw = ev.Start?.DateTime || ev.start?.dateTime || ev.Start || '';
         const endRaw = ev.End?.DateTime || ev.end?.dateTime || ev.End || '';

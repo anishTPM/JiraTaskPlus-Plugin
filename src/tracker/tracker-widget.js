@@ -227,6 +227,13 @@ import { createLogController } from './widget/log-controller.js';
     filterAndRender(refs.taskSearch.value);
   });
 
+  // Prevent host page shortcuts from firing when typing in our inputs
+  ['keydown', 'keyup', 'keypress'].forEach(evt => {
+    refs.taskSearch.addEventListener(evt, e => e.stopPropagation());
+    refs.logDesc.addEventListener(evt, e => e.stopPropagation());
+    refs.logTime.addEventListener(evt, e => e.stopPropagation());
+  });
+
   // ── Init ─────────────────────────────────────────────────────────────────
   if (flags.calendar && navigator.userAgent.includes('Edg/')) meetingCtrl.start();
   timerCtrl.checkInitialState();

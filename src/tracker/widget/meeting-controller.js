@@ -10,6 +10,7 @@ export function createMeetingController(refs, timerController) {
   let dismissedMeetings = new Set();
   let activeMeetingEvent = null;
   let calFilters = { skipAllDay: true, blocklist: [] };
+  let scheduledLink = null; // { key, summary, epicKey, epicSummary, meetingTitle, startTime }
 
   async function loadFilters() {
     return new Promise(r => {
@@ -68,6 +69,17 @@ export function createMeetingController(refs, timerController) {
   function checkUpcoming() {
     const now = new Date();
     const in15 = new Date(now.getTime() + 15 * 60 * 1000);
+
+    // Check if a scheduled link should auto-start
+    if (scheduledLink && !timerController.current) {
+      const schedStart = new Date(scheduledLink.startTime);
+      if (now >= schedStart) {
+        const { key, summary, epicKey, epicSummary, meetingTitle } = scheduledLink;
+        scheduledLink = null;
+        timerController.startTimer(key, summary, epicKey, epicSummary, meetingTitle);
+        return;
+      }
+    }
 
     const next = cachedCalEvents.find(ev => {
       if (!shouldShowEvent(ev)) return false;
@@ -132,5 +144,15 @@ export function createMeetingController(refs, timerController) {
     activeMeetingEvent = null;
   }
 
-  return { start, stop, checkUpcoming, dismiss };
+  function getActiveMeetingStart() {
+    if (!activeMeetingEvent) return null;
+    const raw = activeMeetingEvent.Start?.DateTime || activeMeetingEvent.start?.dateTime || '';
+    return raw.endsWith('Z') ? raw : raw + 'Z';
+  }
+
+  function scheduleLink(linkData) {
+    scheduledLink = linkData;
+  }
+
+  return { start, stop, checkUpcoming, dismiss, getActiveMeetingStart, scheduleLink };
 }

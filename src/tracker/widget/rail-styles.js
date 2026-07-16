@@ -33,6 +33,7 @@ export const RAIL_CSS = `
   .rail-timer .divider { width:1px; height:24px; background:#334155; flex-shrink:0; }
   .rail-timer .task-key { font-size:11px; font-weight:700; color:#818cf8; flex-shrink:0; }
   .rail-timer .task-summary { font-size:13px; color:#e2e8f0; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:350px; }
+  .rail-timer .time-estimate { font-size:11px; color:#a5b4fc; font-weight:600; background:rgba(99,102,241,0.12); padding:2px 8px; border-radius:6px; white-space:nowrap; flex-shrink:0; }
   .rail-timer .epic-badge { font-size:10px; color:#a5b4fc; font-weight:500; flex-shrink:0; }
   .stop-btn { background:#ef4444; color:#fff; border:none; border-radius:8px; padding:7px 16px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; transition:all 0.15s; flex-shrink:0; margin-left:auto; }
   .stop-btn:hover { background:#dc2626; transform:scale(1.03); }
@@ -65,7 +66,8 @@ export const RAIL_CSS = `
   .task-chip { display:flex; align-items:center; gap:8px; background:#1e293b; border:1px solid #334155; border-radius:10px; padding:8px 12px; cursor:default; flex-shrink:0; min-width:180px; max-width:280px; transition:border-color 0.15s, background 0.15s; }
   .task-chip:hover { border-color:#6366f1; background:#1e293b; }
   .task-chip .chip-info { flex:1; overflow:hidden; }
-  .task-chip .chip-key { font-size:10px; font-weight:700; color:#818cf8; }
+  .task-chip .chip-key { font-size:10px; font-weight:700; color:#818cf8; display:flex; align-items:center; gap:6px; }
+  .task-chip .chip-status { font-size:9px; font-weight:600; color:#94a3b8; background:#334155; padding:1px 6px; border-radius:4px; }
   .task-chip .chip-summary { font-size:12px; color:#e2e8f0; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
   .task-chip .chip-epic { font-size:9px; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
   .task-chip.recent { border-color:#334155; background:#162032; }

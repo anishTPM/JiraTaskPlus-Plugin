@@ -34,7 +34,7 @@ export async function fetchTasks(jqlFilter) {
   const data = await jiraFetch(`${jiraBase}/rest/api/3/search/jql`, 'POST', {
     jql: jqlFilter,
     maxResults: MAX_FETCH,
-    fields: ['summary', 'parent']
+    fields: ['summary', 'parent', 'status', 'timetracking']
   });
   return data.issues || [];
 }

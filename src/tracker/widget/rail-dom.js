@@ -22,6 +22,7 @@ export const RAIL_HTML = `
         <span class="divider"></span>
         <span class="task-key" id="active-key"></span>
         <span class="task-summary" id="active-summary"></span>
+        <span class="time-estimate" id="active-estimate" style="display:none"></span>
         <span class="epic-badge" id="active-epic" style="display:none">\u26a1 <span id="active-epic-text"></span></span>
         <button class="stop-btn" id="stop-btn">\u23f9 Stop</button>
       </div>

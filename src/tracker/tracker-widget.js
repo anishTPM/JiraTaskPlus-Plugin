@@ -45,6 +45,7 @@ import { createLogController } from './widget/log-controller.js';
     activeSummary: shadow.getElementById('active-summary'),
     activeEpic: shadow.getElementById('active-epic'),
     activeEpicText: shadow.getElementById('active-epic-text'),
+    activeEstimate: shadow.getElementById('active-estimate'),
     stopBtn: shadow.getElementById('stop-btn'),
     barLog: shadow.getElementById('bar-log'),
     logIssueKey: shadow.getElementById('log-issue-key'),
@@ -78,15 +79,34 @@ import { createLogController } from './widget/log-controller.js';
       refs.meetingChip.classList.add('compact');
       refs.miniPill.classList.remove('visible');
       refs.rail.classList.remove('hidden');
+      // Show remaining/estimate if available
+      const issue = allIssues.find(i => i.key === data?.issueKey);
+      const tt = issue?.fields?.timetracking;
+      if (tt && tt.originalEstimateSeconds) {
+        const est = formatHours(tt.originalEstimateSeconds);
+        const rem = formatHours(tt.remainingEstimateSeconds || 0);
+        refs.activeEstimate.textContent = `(${rem} / ${est})`;
+        refs.activeEstimate.style.display = 'inline';
+      } else {
+        refs.activeEstimate.style.display = 'none';
+      }
     } else if (state === 'idle') {
       refs.meetingChip.classList.remove('compact');
       refs.miniPill.classList.remove('visible');
       refs.rail.classList.remove('hidden');
+      refs.activeEstimate.style.display = 'none';
       if (flags.calendar && navigator.userAgent.includes('Edg/')) meetingCtrl.checkUpcoming();
     } else if (state === 'stopped') {
       logCtrl.setStopData(data);
     }
   };
+
+  function formatHours(seconds) {
+    if (!seconds) return '0h';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  }
 
   // ── Event Bindings ──────────────────────────────────────────────────────
 
@@ -104,9 +124,11 @@ import { createLogController } from './widget/log-controller.js';
   refs.btnLog.addEventListener('click', () => logCtrl.submitLog());
   refs.btnDiscard.addEventListener('click', () => logCtrl.discard());
 
-  // Meeting chip — Link opens task row for linking
+  // Meeting chip — Link opens task row for linking (deferred start at meeting time)
+  let pendingMeetingStartTime = null;
   refs.meetingLinkBtn.addEventListener('click', () => {
     pendingMeetingLink = refs.meetingTitle.textContent || '';
+    pendingMeetingStartTime = meetingCtrl.getActiveMeetingStart();
     refs.taskRow.classList.add('visible');
     refs.railBrand.classList.add('active');
     loadTasks();
@@ -147,11 +169,12 @@ import { createLogController } from './widget/log-controller.js';
       const summary = i.fields?.summary || i.summary || '';
       const epicName = parent?.fields?.summary || i.epicSummary || '';
       const epicLabel = epicName ? `(${epicName.length > 22 ? epicName.slice(0, 22) + '\u2026' : epicName})` : '';
+      const status = i.fields?.status?.name || '';
       const isRecent = recentKeys.has(key);
       return `
         <div class="task-chip${isRecent ? ' recent' : ''}" data-key="${key}" data-summary="${esc(summary)}" data-epic-key="${parent?.key || i.epicKey || ''}" data-epic-summary="${esc(epicName)}">
           <div class="chip-info">
-            <div class="chip-key">${key}</div>
+            <div class="chip-key">${key}${status ? ` <span class="chip-status">${esc(status)}</span>` : ''}</div>
             <div class="chip-summary">${esc(summary)}</div>
             ${epicLabel ? `<div class="chip-epic">${esc(epicLabel)}</div>` : ''}
           </div>
@@ -162,13 +185,24 @@ import { createLogController } from './widget/log-controller.js';
     refs.taskList.querySelectorAll('.task-chip').forEach(chip => {
       chip.addEventListener('click', () => {
         const meetingTitle = pendingMeetingLink || '';
+        const meetingStart = pendingMeetingStartTime;
         pendingMeetingLink = null;
+        pendingMeetingStartTime = null;
         const key = chip.dataset.key;
         const summary = chip.dataset.summary;
         const epicKey = chip.dataset.epicKey;
         const epicSummary = chip.dataset.epicSummary;
         pushRecentTask({ key, summary, epicKey, epicSummary });
-        timerCtrl.startTimer(key, summary, epicKey, epicSummary, meetingTitle);
+
+        // If linked from a meeting, always schedule — auto-starts at meeting time
+        if (meetingTitle && meetingStart) {
+          meetingCtrl.scheduleLink({ key, summary, epicKey, epicSummary, meetingTitle, startTime: meetingStart });
+          refs.meetingLinkBtn.textContent = `\u2705 Linked to ${key}`;
+          refs.meetingBadge.textContent = '\u2705 Linked';
+        } else {
+          timerCtrl.startTimer(key, summary, epicKey, epicSummary, meetingTitle);
+        }
+
         refs.taskRow.classList.remove('visible');
         refs.railBrand.classList.remove('active');
         refs.taskSearch.value = '';

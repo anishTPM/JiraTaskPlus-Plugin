@@ -83,7 +83,7 @@
           <span class="icon">📅</span> Calendar
         </div>
       </nav>
-      <div class="sidebar-footer">v1.5.0 · Bulk Task Creator</div>
+      <div class="sidebar-footer">v1.6.0 · Jira Task Plus by Anish</div>
     </aside>
 
     <!-- Main -->
@@ -214,6 +214,24 @@
             <h3>🌐 Jira Base URL</h3>
             <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Used by the tracker to fetch tasks (auto-detected from org config).</p>
             <input type="text" id="tracker-jira-base" style="width:100%; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:13px; font-family:monospace; outline:none;" />
+          </div>
+
+          <div class="config-card">
+            <h3>🔔 Desktop Reminder</h3>
+            <p style="font-size:12px; color:#64748b; margin-bottom:12px;">Get a desktop notification at regular intervals while the timer is running.</p>
+            <label style="display:flex; align-items:center; gap:10px; font-size:13px; cursor:pointer; margin-bottom:12px;">
+              <input type="checkbox" id="reminder-enabled" style="width:18px; height:18px; cursor:pointer;" />
+              Enable timer reminder notifications
+            </label>
+            <div>
+              <label style="font-size:12px; font-weight:600; color:#475569; display:block; margin-bottom:6px;">Remind every</label>
+              <select id="reminder-interval" style="border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:13px; outline:none; min-width:160px;">
+                <option value="30">30 minutes</option>
+                <option value="60">60 minutes</option>
+                <option value="90">90 minutes</option>
+              </select>
+              <p style="font-size:11px; color:#94a3b8; margin:6px 0 0;">Shows task key, summary, and elapsed time in a Windows notification.</p>
+            </div>
           </div>
 
           <button id="save-tracker" style="background:linear-gradient(135deg,#6366f1,#3b82f6); color:#fff; border:none; border-radius:8px; padding:10px 24px; font-size:13px; font-weight:600; cursor:pointer; margin-top:8px;">💾 Save Tracker Settings</button>

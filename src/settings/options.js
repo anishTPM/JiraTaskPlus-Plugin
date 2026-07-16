@@ -166,12 +166,15 @@ function escHtml(str) {
 
 // ── Tracker Settings ──────────────────────────────────────────────────────
 function loadTrackerSettings() {
-  chrome.storage.local.get(['jtp-features', 'jtp-tempo-token', 'jtp-tracker-jql', 'jtp-tracker-jira-base'], (res) => {
+  chrome.storage.local.get(['jtp-features', 'jtp-tempo-token', 'jtp-tracker-jql', 'jtp-tracker-jira-base', 'jtp-tracker-reminder'], (res) => {
     const features = res['jtp-features'] || {};
+    const reminder = res['jtp-tracker-reminder'] || { enabled: false, interval: 30 };
     document.getElementById('tracker-enabled').checked = !!features.tracker;
     document.getElementById('tempo-token').value = res['jtp-tempo-token'] || '';
     document.getElementById('tracker-jql').value = res['jtp-tracker-jql'] || 'assignee = currentUser() AND sprint in openSprints() AND statusCategory != Done';
     document.getElementById('tracker-jira-base').value = res['jtp-tracker-jira-base'] || ORG_CONFIG.JIRA_BASE_URL;
+    document.getElementById('reminder-enabled').checked = !!reminder.enabled;
+    document.getElementById('reminder-interval').value = String(reminder.interval || 30);
   });
 }
 
@@ -185,6 +188,8 @@ document.getElementById('save-tracker').addEventListener('click', () => {
   const token = document.getElementById('tempo-token').value.trim();
   const jql = document.getElementById('tracker-jql').value.trim();
   const jiraBase = document.getElementById('tracker-jira-base').value.trim();
+  const reminderEnabled = document.getElementById('reminder-enabled').checked;
+  const reminderInterval = parseInt(document.getElementById('reminder-interval').value, 10);
 
   chrome.storage.local.get('jtp-features', (res) => {
     const features = res['jtp-features'] || {};
@@ -194,6 +199,7 @@ document.getElementById('save-tracker').addEventListener('click', () => {
       'jtp-tempo-token': token,
       'jtp-tracker-jql': jql,
       'jtp-tracker-jira-base': jiraBase,
+      'jtp-tracker-reminder': { enabled: reminderEnabled, interval: reminderInterval },
     }, () => {
       const status = document.getElementById('tracker-save-status');
       status.textContent = '✅ Saved! Reload browser tabs for changes to take effect.';

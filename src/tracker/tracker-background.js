@@ -1,14 +1,58 @@
 // ── Tracker Background Handler ──────────────────────────────────────────────
 // Manages timer state via chrome.alarms + chrome.storage.local
 // Also proxies Tempo API calls (content scripts can't due to CORS).
+// Desktop notification reminders when timer is running (configurable interval).
 
 const TIMER_KEY = 'jtp-tracker-timer';
 const ALARM_NAME = 'jtp-tracker-tick';
+const REMINDER_ALARM = 'jtp-tracker-reminder';
+const REMINDER_SETTINGS_KEY = 'jtp-tracker-reminder';
+const NOTIFICATION_ID = 'jtp-timer-reminder';
+
+function formatElapsed(ms) {
+  const sec = Math.floor(ms / 1000);
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+}
+
+function startReminderAlarm(intervalMin) {
+  chrome.alarms.clear(REMINDER_ALARM, () => {
+    if (intervalMin > 0) {
+      chrome.alarms.create(REMINDER_ALARM, { periodInMinutes: intervalMin });
+    }
+  });
+}
+
+function stopReminderAlarm() {
+  chrome.alarms.clear(REMINDER_ALARM);
+  chrome.notifications.clear(NOTIFICATION_ID);
+}
+
+function showReminderNotification(timer) {
+  const elapsed = formatElapsed(Date.now() - timer.startTime);
+  chrome.notifications.create(NOTIFICATION_ID, {
+    type: 'basic',
+    iconUrl: 'assets/icon128.png',
+    title: `\u23f1\ufe0f Timer running \u2014 ${elapsed}`,
+    message: `${timer.issueKey}: ${timer.summary || 'No summary'}`,
+    priority: 2,
+    requireInteraction: false,
+  });
+}
 
 export function initTrackerBackground() {
   chrome.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === ALARM_NAME) {
-      // Keepalive tick — ensures service worker stays alive during tracking
+      // Keepalive tick
+    }
+    if (alarm.name === REMINDER_ALARM) {
+      chrome.storage.local.get(TIMER_KEY, (res) => {
+        const timer = res[TIMER_KEY];
+        if (timer && timer.running) showReminderNotification(timer);
+      });
     }
   });
 
@@ -25,6 +69,11 @@ export function initTrackerBackground() {
       };
       chrome.storage.local.set({ [TIMER_KEY]: timerState }, () => {
         chrome.alarms.create(ALARM_NAME, { periodInMinutes: 1 });
+        // Start reminder alarm if enabled
+        chrome.storage.local.get(REMINDER_SETTINGS_KEY, (res) => {
+          const settings = res[REMINDER_SETTINGS_KEY] || { enabled: false, interval: 30 };
+          if (settings.enabled) startReminderAlarm(settings.interval);
+        });
         sendResponse({ ok: true });
       });
       return true;
@@ -36,6 +85,7 @@ export function initTrackerBackground() {
         if (!timer || !timer.running) { sendResponse({ ok: false }); return; }
         const elapsed = Math.floor((Date.now() - timer.startTime) / 1000);
         chrome.alarms.clear(ALARM_NAME);
+        stopReminderAlarm();
         chrome.storage.local.set({ [TIMER_KEY]: { ...timer, running: false, elapsed } }, () => {
           sendResponse({ ok: true, elapsed, issueKey: timer.issueKey, summary: timer.summary, startTime: timer.startTime, meetingTitle: timer.meetingTitle || '' });
         });
@@ -53,6 +103,7 @@ export function initTrackerBackground() {
     if (msg.type === 'JTP_TIMER_CLEAR') {
       chrome.storage.local.remove(TIMER_KEY, () => {
         chrome.alarms.clear(ALARM_NAME);
+        stopReminderAlarm();
         sendResponse({ ok: true });
       });
       return true;

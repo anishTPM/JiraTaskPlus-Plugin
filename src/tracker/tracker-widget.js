@@ -15,9 +15,10 @@ import { createLogController } from './widget/log-controller.js';
   const flags = await new Promise(r => chrome.storage.local.get('jtp-features', res => r(res['jtp-features'] || {})));
   if (!flags.tracker) return;
 
-  const config = await new Promise(r => chrome.storage.local.get(['jtp-tracker-jql', 'jtp-tempo-token'], res => r(res)));
+  const config = await new Promise(r => chrome.storage.local.get(['jtp-tracker-jql', 'jtp-tempo-token', 'jtp-pill-style'], res => r(res)));
   const TEMPO_TOKEN = config['jtp-tempo-token'] || '';
   const JQL_FILTER = config['jtp-tracker-jql'] || 'assignee = currentUser() AND sprint in openSprints() AND statusCategory != Done';
+  const PILL_STYLE = config['jtp-pill-style'] || 'default';
 
   // ── Shadow DOM Setup ────────────────────────────────────────────────────
   const host = document.createElement('div');
@@ -65,11 +66,45 @@ import { createLogController } from './widget/log-controller.js';
     railHide: shadow.getElementById('rail-hide'),
     miniPill: shadow.getElementById('mini-pill'),
     miniTimer: shadow.getElementById('mini-timer'),
+    miniWeek: shadow.getElementById('mini-week'),
+    logToast: shadow.getElementById('log-toast'),
   };
+
+  // Apply pill style
+  if (PILL_STYLE && PILL_STYLE !== 'default') refs.miniPill.classList.add(`pill-${PILL_STYLE}`);
 
   // ── Initialize Controllers ──────────────────────────────────────────────
   const timerCtrl = createTimerController(refs);
-  const logCtrl = createLogController(refs, timerCtrl, TEMPO_TOKEN);
+  const logCtrl = createLogController(refs, timerCtrl, TEMPO_TOKEN, showLogToast);
+
+  function showLogToast() {
+    refs.logToast.classList.add('visible');
+    setTimeout(() => refs.logToast.classList.remove('visible'), 2000);
+    loadWeeklyTime(); // refresh weekly total
+  }
+
+  // Fetch weekly logged time
+  async function loadWeeklyTime() {
+    if (!TEMPO_TOKEN) { refs.miniWeek.textContent = '—'; return; }
+    try {
+      const now = new Date();
+      const day = now.getDay();
+      const mon = new Date(now); mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1)); mon.setHours(0,0,0,0);
+      const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+      const from = mon.toISOString().split('T')[0];
+      const to = sun.toISOString().split('T')[0];
+      const res = await new Promise(r => chrome.runtime.sendMessage({ type: 'JTP_TEMPO_WEEKLY', token: TEMPO_TOKEN, from, to }, r));
+      if (res && res.ok) {
+        const secs = res.totalSeconds || 0;
+        const h = Math.floor(secs / 3600);
+        const m = Math.floor((secs % 3600) / 60);
+        refs.miniWeek.textContent = `${h}h${m > 0 ? ` ${m}m` : ''} this week`;
+      } else {
+        refs.miniWeek.textContent = '—';
+      }
+    } catch { refs.miniWeek.textContent = '—'; }
+  }
+  loadWeeklyTime();
   let pendingMeetingLink = null;
   const meetingCtrl = createMeetingController(refs, timerCtrl);
 

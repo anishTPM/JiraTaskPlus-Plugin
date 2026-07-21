@@ -96,9 +96,49 @@ export const RAIL_CSS = `
 
 
   /* ── Mini pill (when rail hidden) ──────────────────────────────────────── */
-  .mini-pill { position:fixed; bottom:14px; right:14px; pointer-events:auto; background:linear-gradient(135deg,#1e293b,#0f172a); border-radius:16px; padding:8px 14px; cursor:pointer; box-shadow:0 4px 20px rgba(0,0,0,0.35); display:none; align-items:center; gap:8px; transition:transform 0.15s; z-index:2147483647; }
+  .mini-pill { position:fixed; bottom:14px; right:14px; pointer-events:auto; background:linear-gradient(135deg,#1e293b,#0f172a); border:1px solid #334155; border-radius:16px; padding:8px 14px; cursor:pointer; box-shadow:0 4px 20px rgba(0,0,0,0.35); display:none; align-items:center; gap:8px; transition:transform 0.15s, box-shadow 0.15s; z-index:2147483647; }
   .mini-pill.visible { display:flex; }
   .mini-pill:hover { transform:scale(1.05); }
-  .mini-pill .mp-icon { font-size:16px; }
+  .mini-pill .mp-icon { font-size:16px; line-height:1; }
   .mini-pill .mp-timer { font-family:'SF Mono','Fira Code',monospace; font-size:12px; font-weight:700; color:#f1f5f9; }
+  .mini-pill .mp-week { font-size:10px; color:#94a3b8; white-space:nowrap; }
+  .mini-pill .mp-divider { width:1px; height:14px; background:#475569; flex-shrink:0; }
+
+  /* ── Pill Design: compact ── */
+  .mini-pill.pill-compact { padding:5px 8px; border-radius:20px; gap:5px; bottom:10px; right:10px; box-shadow:0 2px 10px rgba(0,0,0,0.25); }
+  .mini-pill.pill-compact .mp-icon { font-size:12px; }
+  .mini-pill.pill-compact .mp-timer { font-size:10px; }
+  .mini-pill.pill-compact .mp-week { font-size:8px; }
+  .mini-pill.pill-compact .mp-divider { height:10px; }
+
+  /* ── Pill Design: expanded ── */
+  .mini-pill.pill-expanded { padding:12px 22px; border-radius:14px; gap:12px; box-shadow:0 6px 28px rgba(0,0,0,0.45); border-color:#475569; }
+  .mini-pill.pill-expanded .mp-icon { font-size:22px; }
+  .mini-pill.pill-expanded .mp-timer { font-size:16px; letter-spacing:0.5px; }
+  .mini-pill.pill-expanded .mp-week { font-size:12px; color:#a5b4fc; font-weight:600; }
+  .mini-pill.pill-expanded .mp-divider { height:20px; background:#475569; }
+
+  /* ── Pill Design: rounded ── */
+  .mini-pill.pill-rounded { border-radius:50px; padding:10px 20px; gap:10px; background:linear-gradient(135deg,#312e81,#1e1b4b); border:2px solid #6366f1; box-shadow:0 4px 24px rgba(99,102,241,0.35); }
+  .mini-pill.pill-rounded .mp-icon { font-size:16px; }
+  .mini-pill.pill-rounded .mp-timer { font-size:13px; color:#e0e7ff; }
+  .mini-pill.pill-rounded .mp-week { font-size:10px; color:#c7d2fe; }
+  .mini-pill.pill-rounded .mp-divider { height:14px; background:#6366f1; }
+  .mini-pill.pill-rounded:hover { box-shadow:0 6px 30px rgba(99,102,241,0.5); }
+
+  /* ── Pill Design: glass ── */
+  .mini-pill.pill-glass { background:rgba(15,23,42,0.6); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(99,102,241,0.4); border-radius:18px; padding:9px 16px; gap:9px; box-shadow:0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05); }
+  .mini-pill.pill-glass .mp-icon { font-size:16px; }
+  .mini-pill.pill-glass .mp-timer { font-size:12px; color:#e0e7ff; }
+  .mini-pill.pill-glass .mp-week { font-size:10px; color:#a5b4fc; }
+  .mini-pill.pill-glass .mp-divider { height:14px; background:rgba(99,102,241,0.4); }
+  .mini-pill.pill-glass:hover { background:rgba(15,23,42,0.8); border-color:rgba(99,102,241,0.6); }
+
+  /* ── Success Toast ───────────────────────────────────────────────────────── */
+  .log-toast { position:fixed; bottom:60px; right:14px; pointer-events:none; background:linear-gradient(135deg,#065f46,#064e3b); border:1px solid #10b981; border-radius:12px; padding:10px 18px; display:none; align-items:center; gap:8px; z-index:2147483647; animation:toastIn 0.25s ease; box-shadow:0 4px 16px rgba(16,185,129,0.3); }
+  .log-toast.visible { display:flex; }
+  .log-toast .toast-icon { font-size:16px; }
+  .log-toast .toast-text { font-size:12px; font-weight:600; color:#d1fae5; }
+  @keyframes toastIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 `;
+

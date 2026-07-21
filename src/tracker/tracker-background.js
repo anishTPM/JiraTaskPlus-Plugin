@@ -132,6 +132,21 @@ export function initTrackerBackground() {
       return true;
     }
 
+    // Fetch weekly Tempo worklogs total
+    if (msg.type === 'JTP_TEMPO_WEEKLY') {
+      (async () => {
+        try {
+          const url = `https://api.tempo.io/4/worklogs/user/me?from=${msg.from}&to=${msg.to}&limit=1000`;
+          const res = await fetch(url, { headers: { 'Authorization': `Bearer ${msg.token}` } });
+          if (!res.ok) { sendResponse({ ok: false }); return; }
+          const data = await res.json();
+          const totalSeconds = (data.results || []).reduce((sum, w) => sum + (w.timeSpentSeconds || 0), 0);
+          sendResponse({ ok: true, totalSeconds });
+        } catch { sendResponse({ ok: false }); }
+      })();
+      return true;
+    }
+
     // Proxy Jira API calls from content script (avoids CORS on non-Atlassian pages)
     if (msg.type === 'JTP_JIRA_FETCH') {
       (async () => {

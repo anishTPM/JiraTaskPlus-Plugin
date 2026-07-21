@@ -60,6 +60,14 @@ export const RAIL_HTML = `
   <div class="mini-pill" id="mini-pill">
     <span class="mp-icon">\u23f1\ufe0f</span>
     <span class="mp-timer" id="mini-timer"></span>
+    <span class="mp-divider"></span>
+    <span class="mp-week" id="mini-week">0h</span>
+  </div>
+
+  <!-- Success toast -->
+  <div class="log-toast" id="log-toast">
+    <span class="toast-icon">\u2705</span>
+    <span class="toast-text">Time logged successfully!</span>
   </div>
 
 `;

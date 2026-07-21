@@ -2,7 +2,7 @@
 
 import { isExtensionValid, jiraFetch, getJiraBaseUrl } from './task-service.js';
 
-export function createLogController(refs, timerController, tempoToken) {
+export function createLogController(refs, timerController, tempoToken, onLogSuccess) {
   let stopData = null;
 
   function parseTimeInput(str) {
@@ -69,6 +69,7 @@ export function createLogController(refs, timerController, tempoToken) {
 
       refs.logStatus.textContent = '\u2705 Logged!';
       refs.logStatus.className = 'log-status success';
+      if (onLogSuccess) onLogSuccess();
       trackTimerLog();
       timerController.clearTimer();
       stopData = null;

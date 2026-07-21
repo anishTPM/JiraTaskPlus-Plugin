@@ -112,6 +112,7 @@ import { createLogController } from './widget/log-controller.js';
   timerCtrl.onStateChange = (state, data) => {
     if (state === 'running') {
       refs.meetingChip.classList.add('compact');
+      // When timer starts, always show the rail so user sees it
       refs.miniPill.classList.remove('visible');
       refs.rail.classList.remove('hidden');
       // Show remaining/estimate if available
@@ -127,8 +128,6 @@ import { createLogController } from './widget/log-controller.js';
       }
     } else if (state === 'idle') {
       refs.meetingChip.classList.remove('compact');
-      refs.miniPill.classList.remove('visible');
-      refs.rail.classList.remove('hidden');
       refs.activeEstimate.style.display = 'none';
       if (flags.calendar && navigator.userAgent.includes('Edg/')) meetingCtrl.checkUpcoming();
     } else if (state === 'stopped') {
@@ -304,6 +303,10 @@ import { createLogController } from './widget/log-controller.js';
   });
 
   // ── Init ─────────────────────────────────────────────────────────────────
+  // Start collapsed — show mini-pill by default
+  refs.rail.classList.add('hidden');
+  refs.miniPill.classList.add('visible');
+
   if (flags.calendar && navigator.userAgent.includes('Edg/')) meetingCtrl.start();
   timerCtrl.checkInitialState();
 })();

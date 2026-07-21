@@ -35,8 +35,11 @@ export const RAIL_HTML = `
         <button class="chip-dismiss" id="meeting-dismiss">\u00d7</button>
       </div>
 
-      <!-- Hide rail -->
-      <button class="rail-hide" id="rail-hide" title="Minimize">\u2304</button>
+      <!-- Collapse rail -->
+      <button class="rail-hide" id="rail-hide" title="Collapse toolbar">
+        <span class="rail-hide-icon">\u25be</span>
+        <span class="rail-hide-label">Collapse</span>
+      </button>
     </div>
 
     <!-- Task row (inline, search + chips) -->
@@ -62,6 +65,8 @@ export const RAIL_HTML = `
     <span class="mp-timer" id="mini-timer"></span>
     <span class="mp-divider"></span>
     <span class="mp-week" id="mini-week">0h</span>
+    <span class="mp-divider"></span>
+    <span class="mp-expand">&#9650; Expand</span>
   </div>
 
   <!-- Success toast -->

@@ -62,7 +62,6 @@ export function createTimerController(refs) {
     refs.railIdle.style.display = 'flex';
     if (onStateChange) onStateChange('idle', null);
   }
-
   function showLogForm(data) {
     currentTimer = null;
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }

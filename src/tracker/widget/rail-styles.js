@@ -49,9 +49,11 @@ export const RAIL_CSS = `
   .meeting-chip .chip-dismiss { background:none; border:none; color:#64748b; font-size:16px; cursor:pointer; padding:2px 5px; line-height:1; }
   .meeting-chip .chip-dismiss:hover { color:#e2e8f0; }
 
-  /* Rail hide button */
-  .rail-hide { background:none; border:none; color:#475569; font-size:16px; cursor:pointer; padding:4px 8px; margin-left:10px; flex-shrink:0; transition:color 0.15s; }
-  .rail-hide:hover { color:#e2e8f0; }
+  /* Rail hide/collapse button */
+  .rail-hide { display:flex; align-items:center; gap:5px; background:rgba(71,85,105,0.15); border:1px solid #334155; border-radius:8px; color:#64748b; font-size:11px; font-weight:600; cursor:pointer; padding:5px 10px; margin-left:10px; flex-shrink:0; transition:all 0.15s; letter-spacing:0.2px; }
+  .rail-hide:hover { background:rgba(99,102,241,0.12); border-color:#6366f1; color:#a5b4fc; }
+  .rail-hide .rail-hide-icon { font-size:14px; line-height:1; transition:transform 0.2s; }
+  .rail-hide .rail-hide-label { font-size:10px; }
 
   /* ── Task Row (inline horizontal scroll inside rail) ────────────────────── */
   .task-row { display:none; border-top:1px solid #334155; padding:8px 20px; overflow:hidden; }
@@ -98,7 +100,9 @@ export const RAIL_CSS = `
   /* ── Mini pill (when rail hidden) ──────────────────────────────────────── */
   .mini-pill { position:fixed; bottom:14px; right:14px; pointer-events:auto; background:linear-gradient(135deg,#1e293b,#0f172a); border:1px solid #334155; border-radius:16px; padding:8px 14px; cursor:pointer; box-shadow:0 4px 20px rgba(0,0,0,0.35); display:none; align-items:center; gap:8px; transition:transform 0.15s, box-shadow 0.15s; z-index:2147483647; }
   .mini-pill.visible { display:flex; }
-  .mini-pill:hover { transform:scale(1.05); }
+  .mini-pill:hover { transform:scale(1.05); box-shadow:0 6px 24px rgba(99,102,241,0.3); border-color:#6366f1; }
+  .mini-pill .mp-expand { font-size:9px; font-weight:700; color:#64748b; letter-spacing:0.3px; text-transform:uppercase; }
+  .mini-pill:hover .mp-expand { color:#a5b4fc; }
   .mini-pill .mp-icon { font-size:16px; line-height:1; }
   .mini-pill .mp-timer { font-family:'SF Mono','Fira Code',monospace; font-size:12px; font-weight:700; color:#f1f5f9; }
   .mini-pill .mp-week { font-size:10px; color:#94a3b8; white-space:nowrap; }

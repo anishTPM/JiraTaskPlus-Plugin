@@ -12,11 +12,26 @@ export const RAIL_CSS = `
     --scrollbar:#475569;
   }
   .rail.light, .mini-pill.light, .log-toast.light {
-    --bg1:#f8fafc; --bg2:#ffffff; --border:#e2e8f0; --text:#1e293b; --text2:#64748b;
-    --text3:#334155; --muted:#94a3b8; --chip-bg:#f1f5f9; --chip-bg2:#e8f0fe;
-    --input-bg:#ffffff; --input-text:#1e293b; --placeholder:#9ca3af;
-    --scrollbar:#cbd5e1;
+    --bg1:#f1f5f9; --bg2:#ffffff; --border:#cbd5e1; --text:#0f172a; --text2:#475569;
+    --text3:#1e293b; --muted:#64748b; --chip-bg:#ffffff; --chip-bg2:#eff6ff;
+    --input-bg:#ffffff; --input-text:#0f172a; --placeholder:#94a3b8;
+    --scrollbar:#94a3b8;
   }
+
+  /* Light mode hardcoded color overrides */
+  .rail.light .rail-timer .task-key { color:#4338ca; }
+  .rail.light .rail-timer .time-estimate { color:#3730a3; background:rgba(99,102,241,0.1); }
+  .rail.light .rail-timer .epic-badge { color:#4338ca; }
+  .rail.light .rail-timer .active-desc.has-desc { color:#0369a1; }
+  .rail.light .task-chip .chip-key { color:#4338ca; }
+  .rail.light .task-chip:hover .chip-key { color:#3730a3; }
+  .rail.light .bar-log .log-issue { color:#4338ca; }
+  .rail.light .bar-log .log-status.success { color:#15803d; }
+  .rail.light .bar-log .log-status.error { color:#dc2626; }
+  .rail.light .meeting-chip .chip-badge { color:#3730a3; background:rgba(99,102,241,0.12); }
+  .rail.light .meeting-chip .chip-title { color:#1e293b; }
+  .rail.light .rail-hide { background:rgba(99,102,241,0.08); border-color:#cbd5e1; color:#475569; }
+  .rail.light .rail-hide:hover { background:rgba(99,102,241,0.15); border-color:#6366f1; color:#4338ca; }
 
   /* ── Unified Footer Rail ─────────────────────────────────────────────── */
   .rail { position:fixed; bottom:0; left:0; right:0; pointer-events:auto; background:linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 100%); border-top:1px solid var(--border); box-shadow:0 -2px 20px rgba(0,0,0,0.3); z-index:2147483647; display:flex; flex-direction:column; animation:railUp 0.25s ease; }

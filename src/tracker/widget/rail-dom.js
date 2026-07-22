@@ -38,6 +38,7 @@ export const RAIL_HTML = `
       </div>
 
       <!-- Collapse rail -->
+      <button class="rail-theme" id="rail-theme" title="Toggle light/dark mode">\u2600\ufe0f</button>
       <button class="rail-hide" id="rail-hide" title="Collapse toolbar">
         <span class="rail-hide-icon">\u25be</span>
         <span class="rail-hide-label">Collapse</span>

@@ -15,10 +15,11 @@ import { createLogController } from './widget/log-controller.js';
   const flags = await new Promise(r => chrome.storage.local.get('jtp-features', res => r(res['jtp-features'] || {})));
   if (!flags.tracker) return;
 
-  const config = await new Promise(r => chrome.storage.local.get(['jtp-tracker-jql', 'jtp-tempo-token', 'jtp-pill-style'], res => r(res)));
+  const config = await new Promise(r => chrome.storage.local.get(['jtp-tracker-jql', 'jtp-tempo-token', 'jtp-pill-style', 'jtp-rail-theme'], res => r(res)));
   const TEMPO_TOKEN = config['jtp-tempo-token'] || '';
   const JQL_FILTER = config['jtp-tracker-jql'] || 'assignee = currentUser() AND sprint in openSprints() AND statusCategory != Done';
   const PILL_STYLE = config['jtp-pill-style'] || 'default';
+  let isLight = config['jtp-rail-theme'] === 'light';
 
   // ── Shadow DOM Setup ────────────────────────────────────────────────────
   const host = document.createElement('div');
@@ -64,15 +65,32 @@ import { createLogController } from './widget/log-controller.js';
     meetingLinkBtn: shadow.getElementById('meeting-link-btn'),
     meetingDismiss: shadow.getElementById('meeting-dismiss'),
     railHide: shadow.getElementById('rail-hide'),
+    railTheme: shadow.getElementById('rail-theme'),
     miniPill: shadow.getElementById('mini-pill'),
     miniTimer: shadow.getElementById('mini-timer'),
     miniWeek: shadow.getElementById('mini-week'),
     activeDesc: shadow.getElementById('active-desc'),
     descDivider: shadow.getElementById('desc-divider'),
+    logToast: shadow.getElementById('log-toast'),
   };
 
   // Apply pill style
   if (PILL_STYLE && PILL_STYLE !== 'default') refs.miniPill.classList.add(`pill-${PILL_STYLE}`);
+
+  // ── Theme ─────────────────────────────────────────────────────────────────
+  function applyTheme(light) {
+    refs.rail.classList.toggle('light', light);
+    refs.miniPill.classList.toggle('light', light);
+    if (refs.logToast) refs.logToast.classList.toggle('light', light);
+    refs.railTheme.textContent = light ? '\ud83c\udf19' : '\u2600\ufe0f';
+    refs.railTheme.title = light ? 'Switch to dark mode' : 'Switch to light mode';
+  }
+  applyTheme(isLight);
+  refs.railTheme.addEventListener('click', () => {
+    isLight = !isLight;
+    applyTheme(isLight);
+    chrome.storage.local.set({ 'jtp-rail-theme': isLight ? 'light' : 'dark' });
+  });
 
   // ── Initialize Controllers ──────────────────────────────────────────────
   const timerCtrl = createTimerController(refs);

@@ -10,6 +10,11 @@ window.addEventListener('message', (e) => {
 
 // ── Handle requests from background ───────────────────────────────────────
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === 'JTP_RELAY_PING') {
+    sendResponse({ pong: true });
+    return;
+  }
+
   if (msg.type !== 'JTP_RELAY_REQUEST') return;
 
   if (msg.action === 'DEBUG_TOKENS') {

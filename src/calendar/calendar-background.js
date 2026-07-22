@@ -30,6 +30,8 @@ async function getOutlookTab() {
   if (!tabs.length) {
     const tab = await chrome.tabs.create({ url: 'https://outlook.office.com/calendar', active: false });
     await waitForTab(tab.id);
+    // Extra delay for content scripts to initialise after page load
+    await delay(1500);
     tabs = await chrome.tabs.query({ url: OUTLOOK_PATTERNS });
   }
   return tabs[0] || null;
@@ -56,8 +58,16 @@ async function debugCalendarTokens() {
   return sendToRelay(tab.id, { action: 'DEBUG_TOKENS' });
 }
 
-// Send a request to the relay content script and wait for the response via pendingRelays
-function sendToRelay(tabId, payload) {
+// Send a request to the relay content script, retrying if not yet ready
+async function sendToRelay(tabId, payload) {
+  // Retry up to 5 times with 800ms gaps to handle content script init delay
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const ready = await pingRelay(tabId);
+    if (ready) break;
+    if (attempt === 4) return { ok: false, error: 'Outlook tab is open but the extension relay is not responding. Try reloading the Outlook tab.' };
+    await delay(800);
+  }
+
   return new Promise((resolve) => {
     const nonce = Math.random().toString(36).slice(2);
     const timer = setTimeout(() => {
@@ -72,9 +82,20 @@ function sendToRelay(tabId, payload) {
         pendingRelays.delete(nonce);
         resolve({ ok: false, error: chrome.runtime.lastError.message });
       }
-      // Result comes back async via JTP_CALENDAR_RELAY message
     });
   });
+}
+
+function pingRelay(tabId) {
+  return new Promise((resolve) => {
+    chrome.tabs.sendMessage(tabId, { type: 'JTP_RELAY_PING' }, (res) => {
+      resolve(!chrome.runtime.lastError && res?.pong === true);
+    });
+  });
+}
+
+function delay(ms) {
+  return new Promise(r => setTimeout(r, ms));
 }
 
 function waitForTab(tabId) {

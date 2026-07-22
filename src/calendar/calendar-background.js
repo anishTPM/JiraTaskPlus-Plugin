@@ -58,14 +58,22 @@ async function debugCalendarTokens() {
   return sendToRelay(tab.id, { action: 'DEBUG_TOKENS' });
 }
 
-// Send a request to the relay content script, retrying if not yet ready
+// Send a request to the relay content script, injecting it first if needed
 async function sendToRelay(tabId, payload) {
-  // Retry up to 5 times with 800ms gaps to handle content script init delay
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const ready = await pingRelay(tabId);
-    if (ready) break;
-    if (attempt === 4) return { ok: false, error: 'Outlook tab is open but the extension relay is not responding. Try reloading the Outlook tab.' };
-    await delay(800);
+  // Ping first; if not responding, inject the relay script dynamically
+  let ready = await pingRelay(tabId);
+  if (!ready) {
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        files: ['calendar/calendar-relay.js'],
+      });
+      await delay(300);
+    } catch (e) {
+      return { ok: false, error: `Could not inject relay: ${e.message}` };
+    }
+    ready = await pingRelay(tabId);
+    if (!ready) return { ok: false, error: 'Relay injection failed. Try reloading the Outlook tab.' };
   }
 
   return new Promise((resolve) => {

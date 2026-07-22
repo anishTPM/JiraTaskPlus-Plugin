@@ -35,6 +35,9 @@ export const RAIL_CSS = `
   .rail-timer .task-summary { font-size:13px; color:#e2e8f0; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:350px; }
   .rail-timer .time-estimate { font-size:11px; color:#a5b4fc; font-weight:600; background:rgba(99,102,241,0.12); padding:2px 8px; border-radius:6px; white-space:nowrap; flex-shrink:0; }
   .rail-timer .epic-badge { font-size:10px; color:#a5b4fc; font-weight:500; flex-shrink:0; }
+  .rail-timer .active-desc { font-size:11px; color:#64748b; font-style:italic; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; flex-shrink:1; cursor:pointer; transition:color 0.15s; }
+  .rail-timer .active-desc:hover { color:#94a3b8; }
+  .rail-timer .active-desc.has-desc { color:#7dd3fc; font-style:normal; }
   .stop-btn { background:#ef4444; color:#fff; border:none; border-radius:8px; padding:7px 16px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; transition:all 0.15s; flex-shrink:0; margin-left:auto; }
   .stop-btn:hover { background:#dc2626; transform:scale(1.03); }
 

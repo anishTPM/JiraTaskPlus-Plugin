@@ -87,7 +87,7 @@ export function initTrackerBackground() {
         chrome.alarms.clear(ALARM_NAME);
         stopReminderAlarm();
         chrome.storage.local.set({ [TIMER_KEY]: { ...timer, running: false, elapsed } }, () => {
-          sendResponse({ ok: true, elapsed, issueKey: timer.issueKey, summary: timer.summary, startTime: timer.startTime, meetingTitle: timer.meetingTitle || '' });
+          sendResponse({ ok: true, elapsed, issueKey: timer.issueKey, summary: timer.summary, startTime: timer.startTime, meetingTitle: timer.workingOn || timer.meetingTitle || '' });
         });
       });
       return true;

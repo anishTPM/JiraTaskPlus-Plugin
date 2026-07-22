@@ -49,6 +49,26 @@ export function createTimerController(refs) {
     } else {
       refs.activeEpic.style.display = 'none';
     }
+    // Working-on description
+    if (refs.activeDesc) {
+      const desc = timer.meetingTitle || timer.workingOn || '';
+      refs.activeDesc.textContent = desc || '\u270f\ufe0f Add description...';
+      refs.activeDesc.classList.toggle('has-desc', !!desc);
+      if (refs.descDivider) refs.descDivider.style.display = 'inline-block';
+      refs.activeDesc.onclick = () => {
+        const val = prompt('What are you working on? (pre-fills log description)', desc);
+        if (val !== null) {
+          timer.workingOn = val;
+          refs.activeDesc.textContent = val || '\u270f\ufe0f Add description...';
+          refs.activeDesc.classList.toggle('has-desc', !!val);
+          // Persist to storage
+          chrome.storage.local.get('jtp-tracker-timer', (r) => {
+            const t = r['jtp-tracker-timer'];
+            if (t) chrome.storage.local.set({ 'jtp-tracker-timer': { ...t, workingOn: val } });
+          });
+        }
+      };
+    }
     startTickDisplay();
     if (onStateChange) onStateChange('running', timer);
   }

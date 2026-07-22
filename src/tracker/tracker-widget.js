@@ -67,7 +67,8 @@ import { createLogController } from './widget/log-controller.js';
     miniPill: shadow.getElementById('mini-pill'),
     miniTimer: shadow.getElementById('mini-timer'),
     miniWeek: shadow.getElementById('mini-week'),
-    logToast: shadow.getElementById('log-toast'),
+    activeDesc: shadow.getElementById('active-desc'),
+    descDivider: shadow.getElementById('desc-divider'),
   };
 
   // Apply pill style

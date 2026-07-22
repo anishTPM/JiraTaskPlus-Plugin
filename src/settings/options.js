@@ -1,5 +1,20 @@
 import ORG_CONFIG from '../org-config.js';
 
+// ── Theme ────────────────────────────────────────────────────────────────────
+function applyTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  document.body.classList.toggle('dark', dark);
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = dark ? '☀️ Light Mode' : '🌙 Dark Mode';
+}
+chrome.storage.local.get('jtp-dark-mode', (res) => applyTheme(!!res['jtp-dark-mode']));
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('theme-toggle').addEventListener('click', () => {
+    const isDark = document.body.classList.contains('dark');
+    chrome.storage.local.set({ 'jtp-dark-mode': !isDark }, () => applyTheme(!isDark));
+  });
+});
+
 // ── Navigation ──────────────────────────────────────────────────────────────
 document.querySelectorAll('.nav-item').forEach(item => {
   item.addEventListener('click', () => {
@@ -126,14 +141,18 @@ async function syncToConfluence(data) {
     // Row cells: User (email) | Tasks | Time Saved | Bulk Sessions | Last Updated
     const cells = `<td>${escHtml(email)}</td><td>${data.totalTasks}</td><td>${formatTime(totalMinutes)}</td><td>${data.sessions}</td><td>${now}</td>`;
 
-    // Match row by email in first <td>
+    // Match row by email — handle both plain <td> and Confluence storage format
     const emailEscaped = escHtml(email).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const rowRegex = new RegExp(`<tr>\\s*<td>${emailEscaped}<\/td>[\\s\\S]*?<\/tr>`);
+    const rowRegex = new RegExp(`<tr[^>]*>[\\s\\S]*?${emailEscaped}[\\s\\S]*?<\/tr>`, 'i');
 
     if (rowRegex.test(body)) {
       body = body.replace(rowRegex, `<tr>${cells}</tr>`);
-    } else {
+    } else if (body.includes('</tbody>')) {
       body = body.replace(/<\/tbody>/, `<tr>${cells}</tr>\n</tbody>`);
+    } else if (body.includes('</table>')) {
+      body = body.replace(/<\/table>/, `<tr>${cells}</tr>\n</table>`);
+    } else {
+      body += `<table><tbody><tr><th>User</th><th>Tasks</th><th>Time Saved</th><th>Sessions</th><th>Last Updated</th></tr><tr>${cells}</tr></tbody></table>`;
     }
 
     // PUT updated page
@@ -152,8 +171,9 @@ async function syncToConfluence(data) {
     });
     if (!updateRes.ok) throw new Error(`Update failed: ${updateRes.status}`);
 
+    const pageLink = `${ORG_CONFIG.CONFLUENCE_BASE_URL.replace('/wiki/rest/api/content', '/wiki/spaces')}/${ORG_CONFIG.CONFLUENCE_SPACE_KEY}/pages/${ORG_CONFIG.CONFLUENCE_PAGE_ID}`;
     statusEl.className = 'sync-status';
-    statusEl.textContent = `✅ Synced to Confluence as ${email} (${new Date().toLocaleTimeString()})`;
+    statusEl.innerHTML = `✅ Synced as <b>${escHtml(email)}</b> &nbsp;·&nbsp; <a href="${pageLink}" target="_blank" style="color:#166534;text-decoration:underline;">View Confluence page ↗</a> &nbsp;(${new Date().toLocaleTimeString()})`;
   } catch (e) {
     statusEl.className = 'sync-status error';
     statusEl.textContent = `❌ Confluence sync failed: ${e.message}`;

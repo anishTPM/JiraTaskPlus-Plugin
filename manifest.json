@@ -13,11 +13,7 @@
     "notifications"
   ],
   "host_permissions": [
-    "*://*.atlassian.net/*",
-    "https://api.tempo.io/*",
-    "*://*.office.com/*",
-    "*://*.office365.com/*",
-    "*://*.cloud.microsoft/*"
+    "<all_urls>"
   ],
   "content_scripts": [
     {

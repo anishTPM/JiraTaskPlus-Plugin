@@ -153,6 +153,7 @@ export function initTrackerBackground() {
         try {
           const res = await fetch(msg.url, {
             method: msg.method || 'GET',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
             ...(msg.body ? { body: JSON.stringify(msg.body) } : {}),
           });

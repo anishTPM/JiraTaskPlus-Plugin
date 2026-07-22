@@ -25,7 +25,7 @@ export const RAIL_HTML = `
         <span class="time-estimate" id="active-estimate" style="display:none"></span>
         <span class="epic-badge" id="active-epic" style="display:none">\u26a1 <span id="active-epic-text"></span></span>
         <span class="divider" id="desc-divider" style="display:none"></span>
-        <span class="active-desc" id="active-desc"></span>
+        <input class="active-desc" id="active-desc" type="text" placeholder="\u270f\ufe0f Add description..." autocomplete="off" spellcheck="false" />
         <button class="stop-btn" id="stop-btn">\u23f9 Stop</button>
       </div>
 

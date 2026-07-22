@@ -49,25 +49,31 @@ export function createTimerController(refs) {
     } else {
       refs.activeEpic.style.display = 'none';
     }
-    // Working-on description
+    // Working-on description — inline input, no popup
     if (refs.activeDesc) {
-      const desc = timer.meetingTitle || timer.workingOn || '';
-      refs.activeDesc.textContent = desc || '\u270f\ufe0f Add description...';
+      const desc = timer.workingOn || timer.meetingTitle || '';
+      refs.activeDesc.value = desc;
       refs.activeDesc.classList.toggle('has-desc', !!desc);
       if (refs.descDivider) refs.descDivider.style.display = 'inline-block';
-      refs.activeDesc.onclick = () => {
-        const val = prompt('What are you working on? (pre-fills log description)', desc);
-        if (val !== null) {
-          timer.workingOn = val;
-          refs.activeDesc.textContent = val || '\u270f\ufe0f Add description...';
-          refs.activeDesc.classList.toggle('has-desc', !!val);
-          // Persist to storage
+      // Remove old listener by replacing with a fresh one via flag
+      if (!refs.activeDesc._wired) {
+        refs.activeDesc._wired = true;
+        refs.activeDesc.addEventListener('input', () => {
+          refs.activeDesc.classList.toggle('has-desc', !!refs.activeDesc.value);
+        });
+        refs.activeDesc.addEventListener('change', () => {
+          const val = refs.activeDesc.value.trim();
+          if (currentTimer) currentTimer.workingOn = val;
           chrome.storage.local.get('jtp-tracker-timer', (r) => {
             const t = r['jtp-tracker-timer'];
             if (t) chrome.storage.local.set({ 'jtp-tracker-timer': { ...t, workingOn: val } });
           });
-        }
-      };
+        });
+        // Stop host page shortcuts while typing
+        ['keydown', 'keyup', 'keypress'].forEach(evt =>
+          refs.activeDesc.addEventListener(evt, e => e.stopPropagation())
+        );
+      }
     }
     startTickDisplay();
     if (onStateChange) onStateChange('running', timer);
@@ -91,7 +97,7 @@ export function createTimerController(refs) {
     refs.barLog.classList.add('visible');
     refs.logIssueKey.textContent = data.issueKey;
     refs.logTime.value = formatForInput(data.elapsed);
-    refs.logDesc.value = data.meetingTitle || '';
+    refs.logDesc.value = data.meetingTitle || (refs.activeDesc ? refs.activeDesc.value : '') || '';
     refs.logStatus.textContent = '';
     refs.logStatus.className = 'log-status';
     if (onStateChange) onStateChange('logging', data);

@@ -22,7 +22,9 @@ export const RAIL_CSS = `
   .rail.light .rail-timer .task-key { color:#4338ca; }
   .rail.light .rail-timer .time-estimate { color:#3730a3; background:rgba(99,102,241,0.1); }
   .rail.light .rail-timer .epic-badge { color:#4338ca; }
+  .rail.light .rail-timer .active-desc { color:var(--text3); }
   .rail.light .rail-timer .active-desc.has-desc { color:#0369a1; }
+  .rail.light .rail-timer .active-desc:focus { color:#0f172a; }
   .rail.light .task-chip .chip-key { color:#4338ca; }
   .rail.light .task-chip:hover .chip-key { color:#3730a3; }
   .rail.light .bar-log .log-issue { color:#4338ca; }
@@ -64,9 +66,11 @@ export const RAIL_CSS = `
   .rail-timer .task-summary { font-size:13px; color:var(--text3); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:350px; }
   .rail-timer .time-estimate { font-size:11px; color:#a5b4fc; font-weight:600; background:rgba(99,102,241,0.12); padding:2px 8px; border-radius:6px; white-space:nowrap; flex-shrink:0; }
   .rail-timer .epic-badge { font-size:10px; color:#a5b4fc; font-weight:500; flex-shrink:0; }
-  .rail-timer .active-desc { font-size:11px; color:var(--muted); font-style:italic; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; flex-shrink:1; cursor:pointer; transition:color 0.15s; }
-  .rail-timer .active-desc:hover { color:var(--text2); }
-  .rail-timer .active-desc.has-desc { color:#7dd3fc; font-style:normal; }
+  .rail-timer .active-desc { font-size:11px; color:var(--muted); font-style:italic; background:transparent; border:none; border-bottom:1px dashed var(--border); outline:none; padding:2px 4px; width:180px; min-width:80px; max-width:220px; flex-shrink:1; transition:border-color 0.15s, color 0.15s; font-family:inherit; }
+  .rail-timer .active-desc::placeholder { color:var(--muted); font-style:italic; }
+  .rail-timer .active-desc:focus { border-bottom-color:#6366f1; color:var(--text); font-style:normal; }
+  .rail-timer .active-desc.has-desc { color:var(--text3); font-style:normal; border-bottom-color:transparent; }
+  .rail-timer .active-desc.has-desc:focus { border-bottom-color:#6366f1; }
   .stop-btn { background:#ef4444; color:#fff; border:none; border-radius:8px; padding:7px 16px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; transition:all 0.15s; flex-shrink:0; margin-left:auto; }
   .stop-btn:hover { background:#dc2626; transform:scale(1.03); }
 

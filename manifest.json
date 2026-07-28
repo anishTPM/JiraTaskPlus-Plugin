@@ -13,7 +13,8 @@
     "notifications"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "<all_urls>",
+    "*://outlook.cloud.microsoft/*"
   ],
   "content_scripts": [
     {

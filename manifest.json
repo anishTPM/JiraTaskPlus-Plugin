@@ -29,7 +29,12 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["*://*.office.com/*", "*://*.office365.com/*", "*://*.cloud.microsoft/*"],
+      "matches": [
+        "*://outlook.office.com/*",
+        "*://outlook.office365.com/*",
+        "*://outlook.cloud.microsoft/*",
+        "*://outlook.live.com/*"
+      ],
       "js": ["calendar/calendar-relay.js"],
       "run_at": "document_idle"
     }

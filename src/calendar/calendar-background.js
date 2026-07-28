@@ -23,7 +23,7 @@ export function initCalendarBackground() {
 
 const pendingRelays = new Map();
 
-const OUTLOOK_PATTERNS = ['*://outlook.office.com/*', '*://outlook.office365.com/*', '*://outlook.cloud.microsoft/*'];
+const OUTLOOK_PATTERNS = ['*://outlook.office.com/*', '*://outlook.office365.com/*', '*://outlook.cloud.microsoft/*', '*://outlook.live.com/*'];
 
 async function getOutlookTab() {
   let tabs = await chrome.tabs.query({ url: OUTLOOK_PATTERNS });
@@ -58,23 +58,16 @@ async function debugCalendarTokens() {
   return sendToRelay(tab.id, { action: 'DEBUG_TOKENS' });
 }
 
-// Send a request to the relay content script, injecting it first if needed
+// Send a request to the relay content script (declared content script, no dynamic injection)
 async function sendToRelay(tabId, payload) {
-  // Ping first; if not responding, inject the relay script dynamically
-  let ready = await pingRelay(tabId);
-  if (!ready) {
-    try {
-      await chrome.scripting.executeScript({
-        target: { tabId },
-        files: ['calendar/calendar-relay.js'],
-      });
-      await delay(300);
-    } catch (e) {
-      return { ok: false, error: `Could not inject relay: ${e.message}` };
-    }
+  // Retry ping up to 5 times (content script may still be initialising)
+  let ready = false;
+  for (let i = 0; i < 5; i++) {
     ready = await pingRelay(tabId);
-    if (!ready) return { ok: false, error: 'Relay injection failed. Try reloading the Outlook tab.' };
+    if (ready) break;
+    await delay(600);
   }
+  if (!ready) return { ok: false, error: 'Relay not ready. Please reload your Outlook tab and try again.' };
 
   return new Promise((resolve) => {
     const nonce = Math.random().toString(36).slice(2);

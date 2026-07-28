@@ -1,13 +1,12 @@
 // ── Calendar Background Handler ─────────────────────────────────────────────
-// The relay content script registers itself on load via JTP_RELAY_REGISTER.
-// Background never queries tabs or injects scripts — avoids all host permission issues.
+// Relay content script registers itself via JTP_RELAY_REGISTER.
+// Tab ID is persisted to storage.session to survive SW restarts.
 
 export function initCalendarBackground() {
   chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.type === 'JTP_RELAY_REGISTER') {
       if (sender.tab?.id) {
-        relayTabId = sender.tab.id;
-        relayTabUrl = sender.tab.url || '';
+        chrome.storage.session.set({ jtpRelayTabId: sender.tab.id, jtpRelayTabUrl: sender.tab.url || '' });
       }
       return;
     }
@@ -25,46 +24,36 @@ export function initCalendarBackground() {
     return true;
   });
 
-  // Re-register when a tab is updated (e.g. page reload)
-  chrome.tabs.onUpdated.addListener((tabId, info) => {
-    if (info.status === 'complete' && tabId === relayTabId) {
-      // Tab reloaded — relay will re-register itself on load
-      relayTabId = null;
-    }
+  // Clear stored tab ID when the relay tab is closed
+  chrome.tabs.onRemoved.addListener((tabId) => {
+    chrome.storage.session.get('jtpRelayTabId', ({ jtpRelayTabId }) => {
+      if (jtpRelayTabId === tabId) chrome.storage.session.remove(['jtpRelayTabId', 'jtpRelayTabUrl']);
+    });
   });
 }
 
 const pendingRelays = new Map();
-let relayTabId = null;
-let relayTabUrl = '';
 
-async function getRelayTab() {
-  if (relayTabId !== null) return relayTabId;
-
-  // No registered relay — open Outlook and wait for relay to register
-  const tab = await chrome.tabs.create({ url: 'https://outlook.cloud.microsoft/calendar', active: false });
-  // Wait up to 12s for relay to register itself
-  return new Promise((resolve) => {
-    const deadline = setTimeout(() => resolve(null), 12000);
-    const check = setInterval(() => {
-      if (relayTabId !== null) {
-        clearInterval(check);
-        clearTimeout(deadline);
-        resolve(relayTabId);
-      }
-    }, 300);
+async function getStoredRelay() {
+  return new Promise(resolve => {
+    chrome.storage.session.get(['jtpRelayTabId', 'jtpRelayTabUrl'], (res) => {
+      resolve({ tabId: res.jtpRelayTabId ?? null, tabUrl: res.jtpRelayTabUrl ?? '' });
+    });
   });
 }
 
-async function handleCalendarFetch(url) {
-  const tabId = await getRelayTab();
-  if (!tabId) return { ok: false, error: 'Could not reach Outlook. Make sure you are logged in and the calendar tab is open.' };
+async function getRelayTab() {
+  return getStoredRelay();
+}
 
-  // Rewrite URL to match the tab's actual Outlook domain
+async function handleCalendarFetch(url) {
+  const { tabId, tabUrl } = await getRelayTab();
+  if (!tabId) return { ok: false, error: 'Open your Outlook calendar tab first, then try again.' };
+
   let apiUrl = url;
-  if (relayTabUrl.includes('outlook.cloud.microsoft')) {
+  if (tabUrl.includes('outlook.cloud.microsoft')) {
     apiUrl = url.replace('https://outlook.office.com', 'https://outlook.cloud.microsoft');
-  } else if (relayTabUrl.includes('outlook.office365.com')) {
+  } else if (tabUrl.includes('outlook.office365.com')) {
     apiUrl = url.replace('https://outlook.office.com', 'https://outlook.office365.com');
   }
 
@@ -72,7 +61,7 @@ async function handleCalendarFetch(url) {
 }
 
 async function debugCalendarTokens() {
-  const tabId = await getRelayTab();
+  const { tabId } = await getRelayTab();
   if (!tabId) return { error: 'No Outlook tab registered' };
   return sendToRelay(tabId, { action: 'DEBUG_TOKENS' });
 }
@@ -90,8 +79,7 @@ function sendToRelay(tabId, payload) {
       if (chrome.runtime.lastError) {
         clearTimeout(timer);
         pendingRelays.delete(nonce);
-        // Relay tab may have been closed — clear registration
-        relayTabId = null;
+        chrome.storage.session.remove(['jtpRelayTabId', 'jtpRelayTabUrl']);
         resolve({ ok: false, error: chrome.runtime.lastError.message });
       }
     });

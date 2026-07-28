@@ -6,8 +6,15 @@ if (!window.__JTP_RELAY_INIT__) {
   // Tell background this tab is ready
   chrome.runtime.sendMessage({ type: 'JTP_RELAY_REGISTER' });
 
-  // Re-register if service worker restarts
-  chrome.runtime.connect({ name: 'jtp-relay-keepalive' });
+  // Re-register whenever the service worker restarts (port disconnect = SW died)
+  function keepAlive() {
+    const port = chrome.runtime.connect({ name: 'jtp-relay-keepalive' });
+    port.onDisconnect.addListener(() => {
+      chrome.runtime.sendMessage({ type: 'JTP_RELAY_REGISTER' });
+      keepAlive();
+    });
+  }
+  keepAlive();
 
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg.type !== 'JTP_RELAY_REQUEST') return;

@@ -27,13 +27,14 @@ const OUTLOOK_PATTERNS = ['*://outlook.office.com/*', '*://outlook.office365.com
 
 async function getOutlookTab() {
   let tabs = await chrome.tabs.query({ url: OUTLOOK_PATTERNS });
-  if (!tabs.length) {
-    const tab = await chrome.tabs.create({ url: 'https://outlook.office.com/calendar', active: false });
-    await waitForTab(tab.id);
-    // Extra delay for content scripts to initialise after page load
-    await delay(1500);
-    tabs = await chrome.tabs.query({ url: OUTLOOK_PATTERNS });
-  }
+  if (tabs.length) return tabs[0];
+
+  const tab = await chrome.tabs.create({ url: 'https://outlook.office.com/calendar', active: false });
+  // Wait for final navigation (Outlook may redirect through login)
+  await waitForTab(tab.id);
+  await delay(2000);
+  // Re-query — tab may have navigated to a different URL
+  tabs = await chrome.tabs.query({ url: OUTLOOK_PATTERNS });
   return tabs[0] || null;
 }
 
@@ -58,16 +59,17 @@ async function debugCalendarTokens() {
   return sendToRelay(tab.id, { action: 'DEBUG_TOKENS' });
 }
 
-// Send a request to the relay content script (declared content script, no dynamic injection)
 async function sendToRelay(tabId, payload) {
-  // Retry ping up to 5 times (content script may still be initialising)
-  let ready = false;
-  for (let i = 0; i < 5; i++) {
-    ready = await pingRelay(tabId);
-    if (ready) break;
-    await delay(600);
+  // Always (re-)inject the relay script — executeScript is idempotent and
+  // works because <all_urls> is in host_permissions.
+  try {
+    await chrome.scripting.executeScript({ target: { tabId }, files: ['calendar/calendar-relay.js'] });
+  } catch (e) {
+    return { ok: false, error: `Injection failed: ${e.message}` };
   }
-  if (!ready) return { ok: false, error: 'Relay not ready. Please reload your Outlook tab and try again.' };
+  await delay(200);
+  const ready = await pingRelay(tabId);
+  if (!ready) return { ok: false, error: 'Relay not ready. Make sure you are logged into Outlook.' };
 
   return new Promise((resolve) => {
     const nonce = Math.random().toString(36).slice(2);

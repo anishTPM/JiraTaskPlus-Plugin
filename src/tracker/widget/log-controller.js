@@ -71,6 +71,8 @@ export function createLogController(refs, timerController, tempoToken, onLogSucc
       refs.logStatus.className = 'log-status success';
       if (onLogSuccess) onLogSuccess();
       trackTimerLog();
+      // Transition task to In Progress if currently in a To Do / New status
+      transitionToInProgress(stopData.issueKey);
       timerController.clearTimer();
       stopData = null;
     } catch (e) {
@@ -95,6 +97,30 @@ export function createLogController(refs, timerController, tempoToken, onLogSucc
       if (analytics.history.length > 100) analytics.history = analytics.history.slice(-100);
       chrome.storage.local.set({ 'jtp-analytics': analytics });
     });
+  }
+
+  async function transitionToInProgress(issueKey) {
+    if (!isExtensionValid()) return;
+    try {
+      const jiraBase = await getJiraBaseUrl();
+      // Check current status category
+      const issue = await jiraFetch(`${jiraBase}/rest/api/3/issue/${issueKey}?fields=status`);
+      const statusCategory = issue?.fields?.status?.statusCategory?.key;
+      // Only transition if status is 'new' (To Do / Backlog)
+      if (statusCategory !== 'new') return;
+      // Get available transitions
+      const { transitions } = await jiraFetch(`${jiraBase}/rest/api/3/issue/${issueKey}/transitions`);
+      const inProgress = (transitions || []).find(t =>
+        t.to?.statusCategory?.key === 'indeterminate' ||
+        /in.?progress/i.test(t.name)
+      );
+      if (!inProgress) return;
+      await jiraFetch(`${jiraBase}/rest/api/3/issue/${issueKey}/transitions`, 'POST', {
+        transition: { id: inProgress.id }
+      });
+    } catch (_) {
+      // Silent fail — status transition is best-effort
+    }
   }
 
   return { submitLog, discard, setStopData, getStopData };

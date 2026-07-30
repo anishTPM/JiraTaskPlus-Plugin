@@ -258,12 +258,19 @@ function loadCalendarSettings() {
     document.getElementById('calendar-controls').style.pointerEvents = 'none';
     return;
   }
-  chrome.storage.local.get(['jtp-features', 'jtp-calendar-filters'], (res) => {
+  chrome.storage.local.get(['jtp-features', 'jtp-calendar-filters', 'jtp-calendar-cache'], (res) => {
     const features = res['jtp-features'] || {};
     const filters = res['jtp-calendar-filters'] || { skipAllDay: true, blocklist: [] };
     document.getElementById('calendar-enabled').checked = !!features.calendar;
     document.getElementById('filter-allday').checked = filters.skipAllDay !== false;
     document.getElementById('filter-blocklist').value = (filters.blocklist || []).join(', ');
+    // Load cached events
+    const cache = res['jtp-calendar-cache'];
+    if (cache?.events?.length) {
+      const fetchedAt = cache.fetchedAt ? new Date(cache.fetchedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+      document.getElementById('calendar-fetch-status').textContent = `Cached ${fetchedAt ? '@ ' + fetchedAt : ''}`;
+      renderCachedEvents(cache.events, filters);
+    }
   });
 }
 
@@ -297,7 +304,6 @@ document.getElementById('debug-calendar').addEventListener('click', async () => 
       statusEl.style.color = '#991b1b';
       return;
     }
-    // Log each key on its own line so nothing is truncated
     console.log('[JTP Debug] msal.3| entries:');
     res.forEach(e => console.log(JSON.stringify(e)));
     statusEl.textContent = `🔍 ${res.length} msal.3| keys logged to console (F12 → expand each line).`;
@@ -305,68 +311,65 @@ document.getElementById('debug-calendar').addEventListener('click', async () => 
   });
 });
 
-document.getElementById('test-calendar').addEventListener('click', async () => {
-  const statusEl = document.getElementById('calendar-test-status');
-  const resultsEl = document.getElementById('calendar-results');
+document.getElementById('open-outlook').addEventListener('click', () => {
+  chrome.tabs.create({ url: 'https://outlook.cloud.microsoft/calendar', active: true });
+});
+
+function renderCachedEvents(events, filters) {
   const bodyEl = document.getElementById('calendar-events-body');
+  const statusEl = document.getElementById('calendar-fetch-status');
+  if (!events || !events.length) {
+    bodyEl.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#9ca3af; padding:16px;">No events found</td></tr>';
+    return;
+  }
+  const filterAllDay = filters?.skipAllDay !== false;
+  const blockWords = (filters?.blocklist || []).map(s => s.toLowerCase());
+  const now = new Date();
+  const filtered = events.filter(ev => {
+    if (filterAllDay && (ev.IsAllDay || ev.isAllDay)) return false;
+    const subj = (ev.Subject || ev.subject || '').toLowerCase();
+    if (blockWords.some(kw => subj.includes(kw))) return false;
+    return true;
+  });
+  statusEl.textContent = `${events.length} event(s) (${filtered.length} after filters)`;
+  if (!filtered.length) {
+    bodyEl.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#9ca3af;">No events after filtering</td></tr>';
+    return;
+  }
+  bodyEl.innerHTML = filtered.map(ev => {
+    const startRaw = ev.Start?.DateTime || ev.start?.dateTime || ev.Start || '';
+    const endRaw = ev.End?.DateTime || ev.end?.dateTime || ev.End || '';
+    const subject = ev.Subject || ev.subject || '(No subject)';
+    const start = new Date(startRaw.endsWith('Z') ? startRaw : startRaw + 'Z');
+    const end = new Date(endRaw.endsWith('Z') ? endRaw : endRaw + 'Z');
+    const durMin = Math.round((end - start) / 60000);
+    const timeStr = start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const isPast = end < now;
+    const isNow = start <= now && end >= now;
+    const status = isNow ? '🟢 Now' : isPast ? '✅ Done' : '🔵 Upcoming';
+    return `<tr><td>${timeStr}</td><td>${escHtml(subject)}</td><td>${durMin}m</td><td>${status}</td></tr>`;
+  }).join('');
+}
 
+document.getElementById('test-calendar').addEventListener('click', () => {
+  const statusEl = document.getElementById('calendar-fetch-status');
   statusEl.textContent = '⏳ Fetching...';
-  statusEl.style.color = '#1e40af';
-  resultsEl.style.display = 'none';
-
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
   const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString();
-
   const url = `https://outlook.office.com/api/v2.0/me/calendarview?startDateTime=${startOfDay}&endDateTime=${endOfDay}&$orderby=start/dateTime&$top=20`;
-
   chrome.runtime.sendMessage({ type: 'JTP_CALENDAR_FETCH', url }, (res) => {
-    if (chrome.runtime.lastError) {
-      statusEl.textContent = `❌ Extension error: ${chrome.runtime.lastError.message}`;
-      statusEl.style.color = '#991b1b';
+    if (chrome.runtime.lastError || !res?.ok) {
+      statusEl.textContent = `❌ ${res?.error || chrome.runtime.lastError?.message || 'Failed'}`;
       return;
     }
-    if (!res || !res.ok) {
-      statusEl.textContent = `❌ ${res?.error || 'Failed to fetch. Are you logged into Outlook in this browser?'}`;
-      statusEl.style.color = '#991b1b';
-      return;
-    }
-
-    // Handle both REST API format and OWA service.svc format
     const events = res.data.value || res.data.CalendarEvents || res.data.CalendarView || [];
-    statusEl.style.color = '#16a34a';
-
-    // Apply filters to test view
-    const filterAllDay = document.getElementById('filter-allday').checked;
-    const blocklistVal = document.getElementById('filter-blocklist').value;
-    const blockWords = blocklistVal.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-    const filtered = events.filter(ev => {
-      if (filterAllDay && (ev.IsAllDay || ev.isAllDay)) return false;
-      const subj = (ev.Subject || ev.subject || '').toLowerCase();
-      if (blockWords.some(kw => subj.includes(kw))) return false;
-      return true;
-    });
-
-    statusEl.textContent = `✅ Found ${events.length} event(s) today (${filtered.length} after filters)`;
-
-    if (filtered.length === 0) {
-      bodyEl.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#9ca3af">No events after filtering</td></tr>';
-    } else {
-      bodyEl.innerHTML = filtered.map(ev => {
-        // Support REST API (Start.DateTime), Graph API (start.dateTime), and OWA (Start/End as ISO strings)
-        const startRaw = ev.Start?.DateTime || ev.start?.dateTime || ev.Start || '';
-        const endRaw = ev.End?.DateTime || ev.end?.dateTime || ev.End || '';
-        const subject = ev.Subject || ev.subject || '(No subject)';
-        const start = new Date(startRaw.endsWith('Z') ? startRaw : startRaw + 'Z');
-        const end = new Date(endRaw.endsWith('Z') ? endRaw : endRaw + 'Z');
-        const durMin = Math.round((end - start) / 60000);
-        const timeStr = start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const isPast = end < now;
-        const isNow = start <= now && end >= now;
-        const status = isNow ? '🟢 Now' : isPast ? '✅ Done' : '🔵 Upcoming';
-        return `<tr><td>${timeStr}</td><td>${escHtml(subject)}</td><td>${durMin}m</td><td>${status}</td></tr>`;
-      }).join('');
-    }
-    resultsEl.style.display = 'block';
+    // Cache events with timestamp
+    chrome.storage.local.set({ 'jtp-calendar-cache': { events, fetchedAt: new Date().toISOString() } });
+    const filters = {
+      skipAllDay: document.getElementById('filter-allday').checked,
+      blocklist: document.getElementById('filter-blocklist').value.split(',').map(s => s.trim()).filter(Boolean),
+    };
+    renderCachedEvents(events, filters);
   });
 });

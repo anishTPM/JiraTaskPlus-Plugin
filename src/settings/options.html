@@ -345,20 +345,27 @@
 
             <div class="config-card">
               <h3>🧪 Test Connection</h3>
-              <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Fetch today's events from your Outlook calendar to verify the integration works.</p>
-              <button id="test-calendar" style="background:linear-gradient(135deg,#6366f1,#3b82f6); color:#fff; border:none; border-radius:8px; padding:10px 24px; font-size:13px; font-weight:600; cursor:pointer;">📡 Fetch Today's Events</button>
-              <button id="debug-calendar" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:8px; padding:10px 16px; font-size:12px; font-weight:600; cursor:pointer; margin-left:8px;">🔍 Debug Tokens</button>
+              <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Debug MSAL tokens in your Outlook tab to verify the integration is authenticated.</p>
+              <button id="debug-calendar" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:8px; padding:10px 16px; font-size:12px; font-weight:600; cursor:pointer;">🔍 Debug Tokens</button>
               <span id="calendar-test-status" style="margin-left:12px; font-size:12px;"></span>
             </div>
 
-            <div class="config-card" id="calendar-results" style="display:none;">
+            <div class="config-card">
               <h3>📋 Today's Events</h3>
-              <table class="breakdown-table">
-                <thead>
-                  <tr><th>Time</th><th>Title</th><th>Duration</th><th>Status</th></tr>
-                </thead>
-                <tbody id="calendar-events-body"></tbody>
-              </table>
+              <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Events are cached and reloaded every time you click Reload. Open Outlook first if not already open.</p>
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                <button id="test-calendar" style="background:linear-gradient(135deg,#6366f1,#3b82f6); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:13px; font-weight:600; cursor:pointer;">🔄 Reload Today's Events</button>
+                <button id="open-outlook" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:8px; padding:10px 16px; font-size:12px; font-weight:600; cursor:pointer;">🌐 Open Outlook</button>
+                <span id="calendar-fetch-status" style="font-size:12px; color:#64748b;"></span>
+              </div>
+              <div id="calendar-results">
+                <table class="breakdown-table">
+                  <thead>
+                    <tr><th>Time</th><th>Title</th><th>Duration</th><th>Status</th></tr>
+                  </thead>
+                  <tbody id="calendar-events-body"><tr><td colspan="4" style="text-align:center; color:#9ca3af; padding:16px;">No cached events — click Reload Today's Events</td></tr></tbody>
+                </table>
+              </div>
             </div>
 
             <button id="save-calendar" style="background:linear-gradient(135deg,#6366f1,#3b82f6); color:#fff; border:none; border-radius:8px; padding:10px 24px; font-size:13px; font-weight:600; cursor:pointer; margin-top:8px;">💾 Save Calendar Settings</button>

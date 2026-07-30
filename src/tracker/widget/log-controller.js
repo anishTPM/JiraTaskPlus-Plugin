@@ -89,7 +89,8 @@ export function createLogController(refs, timerController, tempoToken, onLogSucc
   function trackTimerLog() {
     if (!isExtensionValid()) return;
     chrome.storage.local.get('jtp-analytics', (result) => {
-      const analytics = result['jtp-analytics'] || { totalTasks: 0, sessions: 0, sprintAssigned: 0, csvImported: 0, history: [] };
+      const analytics = result['jtp-analytics'] || { totalTasks: 0, sessions: 0, sprintAssigned: 0, csvImported: 0, timerLogs: 0, history: [] };
+      analytics.timerLogs = (analytics.timerLogs || 0) + 1;
       analytics.history.push({ date: new Date().toISOString().split('T')[0], count: 1, project: stopData?.issueKey?.split('-')[0] || '', method: 'timer' });
       if (analytics.history.length > 100) analytics.history = analytics.history.slice(-100);
       chrome.storage.local.set({ 'jtp-analytics': analytics });

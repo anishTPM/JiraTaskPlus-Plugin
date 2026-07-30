@@ -48,6 +48,7 @@ document.getElementById('cfg-fc-options').innerHTML = ORG_CONFIG.FINANCIAL_CATEG
 const TIME_PER_TASK_MANUAL = 3;       // navigating, filling fields, submitting
 const TIME_PER_SPRINT_ASSIGN = 1;     // batch sprint assignment bonus
 const TIME_PER_CSV_IMPORT = 2;        // extra time saved per CSV-imported task
+const TIME_PER_TIMER_LOG = 0.5;       // ~30s saved per timer worklog vs manual Tempo entry
 
 async function loadAnalytics() {
   const data = await getAnalyticsData();
@@ -67,7 +68,8 @@ function calculateTimeSaved(data) {
   const taskMinutes = data.totalTasks * TIME_PER_TASK_MANUAL;
   const sprintMinutes = (data.sprintAssigned || 0) * TIME_PER_SPRINT_ASSIGN;
   const csvMinutes = (data.csvImported || 0) * TIME_PER_CSV_IMPORT;
-  return taskMinutes + sprintMinutes + csvMinutes;
+  const timerMinutes = (data.timerLogs || 0) * TIME_PER_TIMER_LOG;
+  return taskMinutes + sprintMinutes + csvMinutes + timerMinutes;
 }
 
 function formatTime(minutes) {
@@ -91,11 +93,13 @@ function renderStats(data) {
   const sprintMin = (data.sprintAssigned || 0) * TIME_PER_SPRINT_ASSIGN;
   const csvMin = (data.csvImported || 0) * TIME_PER_CSV_IMPORT;
 
+  const timerMin = (data.timerLogs || 0) * TIME_PER_TIMER_LOG;
   document.getElementById('breakdown-body').innerHTML = `
     <tr><td>Bulk task creation</td><td>${data.totalTasks}</td><td>${formatTime(taskMin)}</td></tr>
     <tr><td>Sprint batch assignment</td><td>${data.sprintAssigned || 0}</td><td>${formatTime(sprintMin)}</td></tr>
     <tr><td>CSV import</td><td>${data.csvImported || 0}</td><td>${formatTime(csvMin)}</td></tr>
-    <tr style="font-weight:700; border-top:2px solid #e2e8f0"><td>Total</td><td>${data.totalTasks}</td><td>${formatTime(totalMinutes)}</td></tr>
+    <tr><td>Timer worklogs (Tempo)</td><td>${data.timerLogs || 0}</td><td>${formatTime(timerMin)}</td></tr>
+    <tr style="font-weight:700; border-top:2px solid #e2e8f0"><td>Total</td><td>—</td><td>${formatTime(totalMinutes)}</td></tr>
   `;
 
   // Recent activity

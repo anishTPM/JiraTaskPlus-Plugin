@@ -159,6 +159,8 @@ async function syncToConfluence(data) {
 
     const totalMinutes = calculateTimeSaved(data);
     const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const bulkTasks = (data.history || []).filter(h => h.method !== 'timer').reduce((s, h) => s + (h.count || 0), 0);
+    const timerLogs = data.timerLogs || 0;
 
     // Fetch existing page
     const pageUrl = `${ORG_CONFIG.CONFLUENCE_BASE_URL}/${ORG_CONFIG.CONFLUENCE_PAGE_ID}?expand=body.storage,version`;
@@ -168,10 +170,11 @@ async function syncToConfluence(data) {
 
     let body = page.body.storage.value || '';
 
-    // Row cells: User (email) | Tasks | Time Saved | Bulk Sessions | Last Updated
-    const cells = `<td>${escHtml(email)}</td><td>${data.totalTasks}</td><td>${formatTime(totalMinutes)}</td><td>${data.sessions}</td><td>${now}</td>`;
+    // Header row
+    const headerRow = `<tr><th>User Email</th><th>Total Tasks Created</th><th>Bulk Tasks</th><th>Total Timer Worklogs</th><th>Last Updated</th></tr>`;
+    // Data row cells
+    const cells = `<td>${escHtml(email)}</td><td>${data.totalTasks}</td><td>${bulkTasks}</td><td>${timerLogs}</td><td>${now}</td>`;
 
-    // Match row by email — handle both plain <td> and Confluence storage format
     const emailEscaped = escHtml(email).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const rowRegex = new RegExp(`<tr[^>]*>[\\s\\S]*?${emailEscaped}[\\s\\S]*?<\/tr>`, 'i');
 
@@ -182,7 +185,7 @@ async function syncToConfluence(data) {
     } else if (body.includes('</table>')) {
       body = body.replace(/<\/table>/, `<tr>${cells}</tr>\n</table>`);
     } else {
-      body += `<table><tbody><tr><th>User</th><th>Tasks</th><th>Time Saved</th><th>Sessions</th><th>Last Updated</th></tr><tr>${cells}</tr></tbody></table>`;
+      body += `<table><tbody>${headerRow}<tr>${cells}</tr></tbody></table>`;
     }
 
     // PUT updated page

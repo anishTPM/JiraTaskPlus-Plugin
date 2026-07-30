@@ -48,7 +48,7 @@ document.getElementById('cfg-fc-options').innerHTML = ORG_CONFIG.FINANCIAL_CATEG
 const TIME_PER_TASK_MANUAL = 3;       // navigating, filling fields, submitting
 const TIME_PER_SPRINT_ASSIGN = 1;     // batch sprint assignment bonus
 const TIME_PER_CSV_IMPORT = 2;        // extra time saved per CSV-imported task
-const TIME_PER_TIMER_LOG = 0.5;       // ~30s saved per timer worklog vs manual Tempo entry
+const TIME_PER_TIMER_LOG = 1;         // ~60s saved per timer worklog vs manual Tempo/Jira entry (navigate + find issue + fill form + submit)
 
 async function loadAnalytics() {
   const data = await getAnalyticsData();

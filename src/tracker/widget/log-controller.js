@@ -90,11 +90,23 @@ export function createLogController(refs, timerController, tempoToken, onLogSucc
 
   function trackTimerLog() {
     if (!isExtensionValid()) return;
+    const logEntry = {
+      date: new Date().toISOString().split('T')[0],
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      issueKey: stopData?.issueKey || '',
+      project: stopData?.issueKey?.split('-')[0] || '',
+      duration: refs.logTime.value || '',
+      description: refs.logDesc.value || '',
+      method: 'timer',
+    };
     chrome.storage.local.get('jtp-analytics', (result) => {
-      const analytics = result['jtp-analytics'] || { totalTasks: 0, sessions: 0, sprintAssigned: 0, csvImported: 0, timerLogs: 0, history: [] };
+      const analytics = result['jtp-analytics'] || { totalTasks: 0, sessions: 0, sprintAssigned: 0, csvImported: 0, timerLogs: 0, history: [], worklogs: [] };
       analytics.timerLogs = (analytics.timerLogs || 0) + 1;
-      analytics.history.push({ date: new Date().toISOString().split('T')[0], count: 1, project: stopData?.issueKey?.split('-')[0] || '', method: 'timer' });
+      analytics.history.push({ date: logEntry.date, count: 1, project: logEntry.project, method: 'timer' });
       if (analytics.history.length > 100) analytics.history = analytics.history.slice(-100);
+      analytics.worklogs = analytics.worklogs || [];
+      analytics.worklogs.unshift(logEntry);
+      if (analytics.worklogs.length > 100) analytics.worklogs = analytics.worklogs.slice(0, 100);
       chrome.storage.local.set({ 'jtp-analytics': analytics });
     });
   }

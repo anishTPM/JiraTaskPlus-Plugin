@@ -102,12 +102,38 @@ function renderStats(data) {
     <tr style="font-weight:700; border-top:2px solid #e2e8f0"><td>Total</td><td>—</td><td>${formatTime(totalMinutes)}</td></tr>
   `;
 
-  // Recent activity
-  const history = (data.history || []).slice(-20).reverse();
+  // Task creation history tab
+  const history = (data.history || []).filter(h => h.method !== 'timer').slice(-20).reverse();
   document.getElementById('activity-body').innerHTML = history.length
     ? history.map(h => `<tr><td>${h.date}</td><td>${h.count}</td><td>${h.project || '-'}</td><td>${h.method || 'bulk'}</td></tr>`).join('')
-    : '<tr><td colspan="4" style="text-align:center; color:#9ca3af">No activity yet</td></tr>';
+    : '<tr><td colspan="4" style="text-align:center; color:#9ca3af">No task creation activity yet</td></tr>';
+
+  // Timer worklogs tab
+  const worklogs = (data.worklogs || []).slice(0, 50);
+  document.getElementById('worklogs-body').innerHTML = worklogs.length
+    ? worklogs.map(w => `<tr>
+        <td>${w.date}</td>
+        <td>${w.time || '-'}</td>
+        <td><a href="${ORG_CONFIG.JIRA_BASE_URL}/browse/${escHtml(w.issueKey)}" target="_blank" style="color:#6366f1; font-weight:600;">${escHtml(w.issueKey)}</a></td>
+        <td>${escHtml(w.duration)}</td>
+        <td style="max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escHtml(w.description)}">${escHtml(w.description) || '<span style="color:#9ca3af">—</span>'}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="5" style="text-align:center; color:#9ca3af">No timer worklogs yet</td></tr>';
 }
+
+// ── Activity tab switching ───────────────────────────────────────────────────
+document.querySelectorAll('.activity-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.activity-tab').forEach(b => {
+      b.style.borderBottomColor = 'transparent';
+      b.style.color = 'var(--text2)';
+    });
+    btn.style.borderBottomColor = '#6366f1';
+    btn.style.color = '#6366f1';
+    document.getElementById('tab-worklogs').style.display = btn.dataset.tab === 'worklogs' ? 'block' : 'none';
+    document.getElementById('tab-tasks').style.display = btn.dataset.tab === 'tasks' ? 'block' : 'none';
+  });
+});
 
 // ── Confluence Sync ─────────────────────────────────────────────────────────
 // Updates the existing table on the Confluence page.

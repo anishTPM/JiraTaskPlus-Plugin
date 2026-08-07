@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.0.0] - 2026-08-07
+
+### Added
+- Cleaned up bulk creation context model — removed Program issue type and Program/Epic linking fields from the modal flow
+- Kept Epic and Story context detection for task creation only
+
+### Changed
+- Removed Ops Tasks import feature and its disabled UI from the modal
+- Removed `TARGET_START`, `TARGET_END`, `EPIC_LINK_ALT`, and `PARENT_LINK_ALT` custom field references from config and creation payloads
+- Simplified `org-config.js` and `org-config-template.js` to only include active custom fields
+- Updated feature documentation and build artifacts to reflect v2.0.0 scope
+
+### Fixed
+- Modal no longer references removed custom fields when building task payloads or detecting context
+
 ## [1.5.0] - 2025-07-10
 
 ### Added

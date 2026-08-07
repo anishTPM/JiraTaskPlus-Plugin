@@ -17,12 +17,6 @@ const ENVIRONMENTS = {
     CUSTOM_FIELDS: {
       FINANCIAL_CATEGORY: 'customfield_10195',
       STORY_POINTS: 'customfield_10058',
-      TARGET_START: 'customfield_10022',
-      TARGET_END: 'customfield_10023',
-      EPIC_LINK: 'customfield_10014',
-      EPIC_LINK_ALT: 'customfield_10000',
-      PARENT_LINK: 'parent',
-      PARENT_LINK_ALT: 'customfield_16400',
       SPRINT: 'customfield_10020',
     },
   },
@@ -32,14 +26,8 @@ const ENVIRONMENTS = {
     CONFLUENCE_PAGE_ID: '__',
     CONFLUENCE_SPACE_KEY: 'TPMT',
     CUSTOM_FIELDS: {
-      FINANCIAL_CATEGORY: 'customfield_10141',
-      STORY_POINTS: 'customfield_10107', // not on Task screen — update when correct field found
-      TARGET_START: 'customfield_10022',
-      TARGET_END: 'customfield_10023',
-      EPIC_LINK: 'customfield_10014',
-      EPIC_LINK_ALT: 'customfield_10000',
-      PARENT_LINK: 'parent',
-      PARENT_LINK_ALT: 'customfield_16400',
+      FINANCIAL_CATEGORY: 'customfield_10076',
+      STORY_POINTS: 'customfield_10107',
       SPRINT: 'customfield_10020',
     },
   },
@@ -54,7 +42,6 @@ const SHARED = {
     BUG: 'Bug',
     STORY: 'Story',
     EPIC: 'Epic',
-    PROGRAM: 'Program',
   }
 };
 

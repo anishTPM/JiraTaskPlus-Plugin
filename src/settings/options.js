@@ -40,7 +40,7 @@ Object.entries(ORG_CONFIG.CUSTOM_FIELDS).forEach(([key, value]) => {
   fieldsEl.innerHTML += `<span class="label">${key}</span><span class="value">${value}</span>`;
 });
 
-document.getElementById('cfg-fc-options').innerHTML = ORG_CONFIG.FINANCIAL_CATEGORY_OPTIONS
+document.getElementById('cfg-fc-options').innerHTML = (ORG_CONFIG.FINANCIAL_CATEGORY_OPTIONS || [])
   .map(o => `<span class="badge">${o}</span>`).join('');
 
 // ── Analytics ───────────────────────────────────────────────────────────────
@@ -138,8 +138,24 @@ document.querySelectorAll('.activity-tab').forEach(btn => {
 // ── Confluence Sync ─────────────────────────────────────────────────────────
 // Updates the existing table on the Confluence page.
 // Finds user row by email/name → updates it, or appends a new row.
+//
+// NOTE: The options page runs on a chrome-extension:// origin. A direct fetch()
+// to Jira/Confluence is cross-origin and is blocked by CORS (and hangs), because
+// the page cannot present the Jira session cookies. We route the calls through
+// the background service-worker proxy (JTP_JIRA_FETCH), which has cookie access.
+function jiraProxyFetch(url, method = 'GET', body = null) {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({ type: 'JTP_JIRA_FETCH', url, method, body }, (res) => {
+      if (chrome.runtime.lastError) { reject(new Error(chrome.runtime.lastError.message)); return; }
+      if (!res || !res.ok) { reject(new Error(res?.error || 'Fetch failed')); return; }
+      resolve(res.data);
+    });
+  });
+}
+
 async function syncToConfluence(data) {
   const statusEl = document.getElementById('sync-status');
+  if (!statusEl) return;
   if (!ORG_CONFIG.CONFLUENCE_BASE_URL || !ORG_CONFIG.CONFLUENCE_PAGE_ID) {
     statusEl.className = 'sync-status error';
     statusEl.textContent = '⚠️ Confluence page not configured in org config.';
@@ -150,10 +166,13 @@ async function syncToConfluence(data) {
   statusEl.textContent = '⏳ Syncing analytics to Confluence...';
 
   try {
+    // Resolve the Jira base URL the user configured for the tracker (falls back to org config)
+    const jiraBase = await new Promise(r =>
+      chrome.storage.local.get('jtp-tracker-jira-base', res => r(res['jtp-tracker-jira-base'] || ORG_CONFIG.JIRA_BASE_URL))
+    );
+
     // Get current Jira user — use emailAddress as unique identifier
-    const userRes = await fetch(`${ORG_CONFIG.JIRA_BASE_URL}/rest/api/3/myself`, { credentials: 'include' });
-    if (!userRes.ok) throw new Error('Failed to fetch current user');
-    const user = await userRes.json();
+    const user = await jiraProxyFetch(`${jiraBase}/rest/api/3/myself`);
     const email = user.emailAddress;
     if (!email) throw new Error('No email found for current user');
 
@@ -164,9 +183,7 @@ async function syncToConfluence(data) {
 
     // Fetch existing page
     const pageUrl = `${ORG_CONFIG.CONFLUENCE_BASE_URL}/${ORG_CONFIG.CONFLUENCE_PAGE_ID}?expand=body.storage,version`;
-    const pageRes = await fetch(pageUrl, { credentials: 'include' });
-    if (!pageRes.ok) throw new Error(`Failed to fetch page: ${pageRes.status}`);
-    const page = await pageRes.json();
+    const page = await jiraProxyFetch(pageUrl);
 
     let body = page.body.storage.value || '';
 
@@ -188,21 +205,15 @@ async function syncToConfluence(data) {
       body += `<table><tbody>${headerRow}<tr>${cells}</tr></tbody></table>`;
     }
 
-    // PUT updated page
-    const updateRes = await fetch(`${ORG_CONFIG.CONFLUENCE_BASE_URL}/${ORG_CONFIG.CONFLUENCE_PAGE_ID}`, {
-      method: 'PUT',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: ORG_CONFIG.CONFLUENCE_PAGE_ID,
-        type: 'page',
-        title: page.title,
-        space: { key: ORG_CONFIG.CONFLUENCE_SPACE_KEY },
-        version: { number: page.version.number + 1 },
-        body: { storage: { value: body, representation: 'storage' } }
-      })
+    // PUT updated page via proxy
+    await jiraProxyFetch(`${ORG_CONFIG.CONFLUENCE_BASE_URL}/${ORG_CONFIG.CONFLUENCE_PAGE_ID}`, 'PUT', {
+      id: ORG_CONFIG.CONFLUENCE_PAGE_ID,
+      type: 'page',
+      title: page.title,
+      space: { key: ORG_CONFIG.CONFLUENCE_SPACE_KEY },
+      version: { number: page.version.number + 1 },
+      body: { storage: { value: body, representation: 'storage' } }
     });
-    if (!updateRes.ok) throw new Error(`Update failed: ${updateRes.status}`);
 
     const pageLink = `${ORG_CONFIG.CONFLUENCE_BASE_URL.replace('/wiki/rest/api/content', '/wiki/spaces')}/${ORG_CONFIG.CONFLUENCE_SPACE_KEY}/pages/${ORG_CONFIG.CONFLUENCE_PAGE_ID}`;
     statusEl.className = 'sync-status';

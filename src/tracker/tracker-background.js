@@ -43,6 +43,39 @@ function showReminderNotification(timer) {
   });
 }
 
+// ── Jira API proxy (always on) ─────────────────────────────────────────────
+// The options page (chrome-extension:// origin) cannot fetch Jira/Confluence
+// directly — those are cross-origin requests that get blocked by CORS and hang.
+// This proxy runs in the service worker, which has access to the Jira cookies,
+// so it performs the request on behalf of the page. Registered unconditionally
+// so Confluence sync and the tracker widget work regardless of the tracker flag.
+export function initJiraProxy() {
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (msg.type !== 'JTP_JIRA_FETCH') return;
+
+    (async () => {
+      try {
+        const res = await fetch(msg.url, {
+          method: msg.method || 'GET',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          ...(msg.body ? { body: JSON.stringify(msg.body) } : {}),
+        });
+        if (!res.ok) {
+          const err = await res.text();
+          sendResponse({ ok: false, error: `${res.status}: ${err}` });
+        } else {
+          const data = await res.json();
+          sendResponse({ ok: true, data });
+        }
+      } catch (e) {
+        sendResponse({ ok: false, error: e.message });
+      }
+    })();
+    return true;
+  });
+}
+
 export function initTrackerBackground() {
   chrome.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === ALARM_NAME) {
@@ -143,30 +176,6 @@ export function initTrackerBackground() {
           const totalSeconds = (data.results || []).reduce((sum, w) => sum + (w.timeSpentSeconds || 0), 0);
           sendResponse({ ok: true, totalSeconds });
         } catch { sendResponse({ ok: false }); }
-      })();
-      return true;
-    }
-
-    // Proxy Jira API calls from content script (avoids CORS on non-Atlassian pages)
-    if (msg.type === 'JTP_JIRA_FETCH') {
-      (async () => {
-        try {
-          const res = await fetch(msg.url, {
-            method: msg.method || 'GET',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            ...(msg.body ? { body: JSON.stringify(msg.body) } : {}),
-          });
-          if (!res.ok) {
-            const err = await res.text();
-            sendResponse({ ok: false, error: `${res.status}: ${err}` });
-          } else {
-            const data = await res.json();
-            sendResponse({ ok: true, data });
-          }
-        } catch (e) {
-          sendResponse({ ok: false, error: e.message });
-        }
       })();
       return true;
     }

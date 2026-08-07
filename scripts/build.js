@@ -26,23 +26,28 @@ console.log('📦 Bundling…');
 execSync('npx rollup -c --bundleConfigAsCjs', { cwd: root, stdio: 'inherit', env: { ...process.env, NODE_ENV: 'production' } });
 
 // ── 4. Obfuscate JS ────────────────────────────────────────────────────────
-console.log('🔒 Obfuscating…');
-const obfuscateOptions = {
-  compact: true,
-  controlFlowFlattening: false,
-  deadCodeInjection: false,
-  stringArray: true,
-  stringArrayEncoding: ['base64'],
-  rotateStringArray: true,
-};
+const OBFUSCATE = false;
+if (OBFUSCATE) {
+  console.log('🔒 Obfuscating…');
+  const obfuscateOptions = {
+    compact: true,
+    controlFlowFlattening: false,
+    deadCodeInjection: false,
+    stringArray: true,
+    stringArrayEncoding: ['base64'],
+    rotateStringArray: true,
+  };
 
-['modal/modal.js', 'settings/options.js', 'tracker/tracker-widget.js'].forEach(file => {
-  const filePath = path.join(build, file);
-  if (!fs.existsSync(filePath)) return;
-  const code = fs.readFileSync(filePath, 'utf8');
-  const result = JavaScriptObfuscator.obfuscate(code, obfuscateOptions);
-  fs.writeFileSync(filePath, result.getObfuscatedCode());
-});
+  ['modal/modal.js', 'settings/options.js', 'tracker/tracker-widget.js'].forEach(file => {
+    const filePath = path.join(build, file);
+    if (!fs.existsSync(filePath)) return;
+    const code = fs.readFileSync(filePath, 'utf8');
+    const result = JavaScriptObfuscator.obfuscate(code, obfuscateOptions);
+    fs.writeFileSync(filePath, result.getObfuscatedCode());
+  });
+} else {
+  console.log('⏭️  Obfuscation skipped (debug build)');
+}
 
 // ── 5. Copy static files ───────────────────────────────────────────────────
 console.log('📋 Copying static files…');

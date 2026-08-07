@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#070a1a" />
+  <title>Installation — Jira Task Plus v2.0.0</title>
+  <style>
+    :root {
+      --bg: #070a1a;
+      --text: #f8fbff;
+      --muted: #a9b7d6;
+      --muted-2: #7f8cac;
+      --cyan: #22d3ee;
+      --indigo: #818cf8;
+      --violet: #a78bfa;
+      --green: #34d399;
+      --amber: #fbbf24;
+      --radius-xl: 34px;
+      --radius: 22px;
+      --max: 900px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(34,211,238,.24), transparent 28%),
+        radial-gradient(circle at 88% 14%, rgba(167,139,250,.26), transparent 30%),
+        linear-gradient(180deg, #070a1a 0%, #0b1028 52%, #080b1d 100%);
+      line-height: 1.65;
+    }
+
+    .wrap { width: min(var(--max), calc(100% - 40px)); margin: 0 auto; }
+    .topbar {
+      position: sticky; top: 14px; z-index: 100;
+      width: min(var(--max), calc(100% - 28px)); margin: 14px auto 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px 12px 16px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(8,11,29,.58);
+      backdrop-filter: blur(20px) saturate(150%);
+      border-radius: 999px;
+      box-shadow: 0 22px 70px rgba(0,0,0,.24);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.02em; }
+    .brand-mark {
+      width: 38px; height: 38px; display: grid; place-items: center; border-radius: 14px;
+      background: linear-gradient(135deg, rgba(34,211,238,.95), rgba(129,140,248,.92));
+      box-shadow: 0 17px 34px rgba(34,211,238,.22); color: #06101f; font-size: 20px; transform: rotate(-8deg);
+    }
+    .nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .nav a {
+      color: var(--muted); font-size: 13px; font-weight: 750; padding: 8px 12px; border-radius: 999px; transition: .25s ease;
+    }
+    .nav a:hover { color: var(--text); background: rgba(255,255,255,.08); }
+
+    .hero { padding: 80px 0 40px; text-align: center; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 10px; padding: 8px 13px; border-radius: 999px;
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); color: #dce8ff;
+      font-size: 13px; font-weight: 800;
+    }
+    .pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 0 rgba(52,211,153,.8); animation: pulse 1.8s infinite; }
+    @keyframes pulse { 70% { box-shadow: 0 0 0 12px rgba(52,211,153,0); } 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); } }
+    h1 { margin: 22px 0 18px; font-size: clamp(42px, 6vw, 72px); line-height: .96; letter-spacing: -.06em; font-weight: 950; }
+    .hero p.lead { max-width: 640px; margin: 0 auto; font-size: clamp(17px, 2vw, 21px); color: var(--muted); }
+
+    .section { padding: 36px 0; scroll-margin-top: 110px; }
+    .section-head { margin-bottom: 24px; }
+    .kicker { color: var(--cyan); font-size: 13px; font-weight: 950; letter-spacing: .16em; text-transform: uppercase; }
+    h2 { margin: 8px 0 0; font-size: clamp(30px, 4vw, 46px); line-height: 1; letter-spacing: -.05em; }
+    h3 { margin: 24px 0 10px; font-size: 20px; letter-spacing: -.02em; }
+
+    .card {
+      border: 1px solid rgba(255,255,255,.14);
+      background: linear-gradient(145deg, rgba(255,255,255,.11), rgba(255,255,255,.045));
+      backdrop-filter: blur(18px); border-radius: var(--radius-xl);
+      padding: 26px; margin-bottom: 18px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.24);
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 7px; width: max-content; padding: 6px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 950; letter-spacing: .08em; text-transform: uppercase;
+      border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.08); color: #dbeafe;
+    }
+    .badge.recommended { color: #b9fbcf; background: rgba(52,211,153,.10); border-color: rgba(52,211,153,.24); }
+
+    ol.steps { margin: 12px 0 0; padding-left: 22px; }
+    ol.steps li { margin: 12px 0; color: var(--muted); }
+    ol.steps li b { color: var(--text); }
+
+    pre {
+      margin: 16px 0 0; padding: 18px 20px; border-radius: 20px; overflow-x: auto;
+      background: rgba(7,10,26,.75); border: 1px solid rgba(255,255,255,.11);
+      color: #e0e7ff; font: 800 14px/1.6 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    code.inline { background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.12); padding: 2px 7px; border-radius: 8px; font-size: 13px; }
+
+    .note {
+      border-left: 3px solid var(--amber); padding: 12px 16px; margin-top: 16px;
+      background: rgba(251,191,36,.08); border-radius: 0 14px 14px 0; color: var(--muted); font-size: 14px;
+    }
+    .note strong { color: var(--text); }
+
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .mini {
+      border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); border-radius: 20px; padding: 18px;
+    }
+    .mini h4 { margin: 0 0 8px; font-size: 16px; }
+    .mini p { margin: 0; color: var(--muted); font-size: 14px; }
+
+    .footer { padding: 50px 0 70px; text-align: center; color: var(--muted-2); font-size: 14px; }
+    .footer b { color: var(--text); }
+
+    @media (max-width: 760px) {
+      .grid2 { grid-template-columns: 1fr; }
+      .topbar { flex-direction: column; align-items: flex-start; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a href="#top" class="brand" aria-label="Jira Task Plus home">
+      <span class="brand-mark">J</span>
+      <span>Jira Task Plus</span>
+    </a>
+    <nav class="nav" aria-label="Nav">
+      <a href="features.html">Features</a>
+      <a href="installation.html">Install</a>
+      <a href="CHANGELOG.md">Changelog</a>
+    </nav>
+  </header>
+
+  <main id="top" class="wrap">
+    <section class="hero">
+      <div class="eyebrow"><span class="pulse"></span> v2.0.0 · Chrome/Edge Extension</div>
+      <h1>Install Jira Task Plus</h1>
+      <p class="lead">Two ways to get started — load the prebuilt release in seconds, or build from source for full org configuration.</p>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="kicker">Before you start</div>
+        <h2>Prerequisites</h2>
+      </div>
+      <div class="grid2">
+        <div class="mini"><h4>Runtime</h4><p>A Jira Cloud instance (<code class="inline">*.atlassian.net</code>) you are signed into, and a Chromium browser (Chrome or Edge).</p></div>
+        <div class="mini"><h4>Build from source</h4><p>Node.js 18+ and npm. Only needed if you choose Option B below.</p></div>
+        <div class="mini"><h4>Tempo (optional)</h4><p>A Tempo API token to log worklogs from the footer timer.</p></div>
+        <div class="mini"><h4>Calendar (Edge only)</h4><p>Microsoft Edge signed into Outlook for meeting reminders.</p></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="card">
+        <span class="badge recommended">Recommended</span>
+        <h2 style="font-size:32px; margin-top:14px;">Option A — From Release</h2>
+        <p style="color:var(--muted)">No build tools required. The <code class="inline">releases/</code> zip already contains the bundled extension.</p>
+        <ol class="steps">
+          <li>Download the latest <code class="inline">.zip</code> from the <code class="inline">releases/</code> folder.</li>
+          <li>Unzip it to a local folder (e.g. <code class="inline">~/jira-task-plus-build</code>).</li>
+          <li>Open the extensions page:
+            <br>• Chrome: <code class="inline">chrome://extensions</code>
+            <br>• Edge: <code class="inline">edge://extensions</code>
+          </li>
+          <li>Enable <b>Developer mode</b> (top-right toggle).</li>
+          <li>Click <b>Load unpacked</b> and select the unzipped <code class="inline">build/</code> folder.</li>
+          <li>Open any Jira issue page — the <b>Bulk Add</b> button appears in the issue header.</li>
+        </ol>
+        <div class="note"><strong>Tip:</strong> Reload the extension from the extensions page after pulling a new release zip.</div>
+      </div>
+
+      <div class="card">
+        <span class="badge">From Source</span>
+        <h2 style="font-size:32px; margin-top:14px;">Option B — From Source</h2>
+        <p style="color:var(--muted)">Use this when you need to set tenant-specific URLs and field IDs in <code class="inline">src/org-config.js</code>.</p>
+        <pre># 1. Clone
+git clone https://github.com/anishTPM/JiraTaskPlus-Plugin.git
+cd jira-task-plus
+
+# 2. Install dependencies
+npm install
+
+# 3. Create org config from the template
+cp src/org-config-template.js src/org-config.js
+#    then edit src/org-config.js with your Jira/Confluence details
+
+# 4. Build (outputs to build/ and releases/)
+npm run build
+
+# 5. Load unpacked — select the generated build/ folder (Option A, steps 3–5)</pre>
+        <p style="color:var(--muted); margin-top:16px;">For live development without obfuscation:</p>
+        <pre>npm run watch</pre>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="kicker">Configuration</div>
+        <h2>Set up your org config</h2>
+      </div>
+      <div class="card">
+        <p style="color:var(--muted); margin-top:0;"><code class="inline">src/org-config.js</code> is <b>gitignored</b> and never committed. Copy the template and edit it for your instance:</p>
+        <pre>cp src/org-config-template.js src/org-config.js</pre>
+        <ol class="steps">
+          <li>Set <code class="inline">JIRA_BASE_URL</code> for each environment (production / staging).</li>
+          <li>Update <code class="inline">CUSTOM_FIELDS</code> with your instance's active field IDs.</li>
+          <li>Set <code class="inline">CONFLUENCE_BASE_URL</code>, <code class="inline">CONFLUENCE_PAGE_ID</code>, <code class="inline">CONFLUENCE_SPACE_KEY</code> for analytics sync.</li>
+          <li>Adjust <code class="inline">SHARED</code> settings (issue types, financial categories).</li>
+        </ol>
+        <p style="color:var(--muted);">The extension auto-detects the environment from the current page URL.</p>
+        <div class="note"><strong>Never commit <code class="inline">src/org-config.js</code></strong> — it can contain tenant URLs and field IDs. Keep <code class="inline">src/org-config-template.js</code> as the shared reference.</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="kicker">Post-install</div>
+        <h2>Enable the features you need</h2>
+      </div>
+      <div class="grid2">
+        <div class="mini"><h4>Tempo timer</h4><p>Right-click the icon → <b>Options</b> → Tracker tab → paste your Tempo token, save, then reload any tab.</p></div>
+        <div class="mini"><h4>Calendar (Edge)</h4><p>Options → Calendar tab → enable the toggle, save, reload a tab, and sign into Outlook in Edge.</p></div>
+        <div class="mini"><h4>Analytics</h4><p>Open Options → Analytics to view stats. Opening it also syncs a row to the configured Confluence page.</p></div>
+        <div class="mini"><h4>Bulk create</h4><p>Open a Story or Epic in Jira and click <b>Bulk Add</b> in the header.</p></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="kicker">Help</div>
+        <h2>Troubleshooting</h2>
+      </div>
+      <div class="card">
+        <ul style="color:var(--muted); margin:0; padding-left:20px; line-height:1.9;">
+          <li><b>Button missing on a Jira page:</b> confirm you are on an issue page (<code class="inline">/browse/KEY</code>) and the extension is enabled; reload the tab.</li>
+          <li><b>Build fails:</b> delete <code class="inline">node_modules/</code> and <code class="inline">build/</code>, then re-run <code class="inline">npm install</code> and <code class="inline">npm run build</code>.</li>
+          <li><b>Tempo "No token" error:</b> re-enter the Tempo token in Options → Tracker and reload the tab.</li>
+          <li><b>Calendar not working in Chrome:</b> calendar integration requires Microsoft Edge (Chrome encrypts the tokens used by the relay).</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <b>Jira Task Plus v2.0.0</b> · Chrome/Edge Extension · MIT License
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,4 +1,4 @@
-import { initTrackerBackground } from './tracker/tracker-background.js';
+import { initTrackerBackground, initJiraProxy } from './tracker/tracker-background.js';
 import { initCalendarBackground } from './calendar/calendar-background.js';
 
 const FOCUS_KEY = 'jtp-focus-mode';
@@ -6,6 +6,10 @@ const FOCUS_KEY = 'jtp-focus-mode';
 // ── Feature Flags ─────────────────────────────────────────────────────────
 // Calendar listener always active (lightweight proxy, needed by settings page)
 initCalendarBackground();
+
+// Jira API proxy is always on — the options page and tracker widget rely on it
+// to call Jira/Confluence from a non-Jira origin without CORS issues.
+initJiraProxy();
 
 chrome.storage.local.get('jtp-features', (res) => {
   const features = res['jtp-features'] || {};

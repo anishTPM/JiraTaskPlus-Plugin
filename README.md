@@ -5,7 +5,7 @@ A Chrome/Edge extension for bulk creating Jira tasks and tracking time with Temp
 ## Features
 
 - **Bulk Task Creation** — Create multiple tasks at once from any Story or Epic page
-- **Auto-context** — Automatically fills Epic Link, Program, Sprint from parent issue
+- **Auto-context** — Automatically fills Epic Link and Sprint from parent issue
 - **Smart Defaults** — Copies Financial Category and Assignee from previous row
 - **Sprint Selection** — Per-row sprint picker with active 🟢 and future 🔵 sprints
 - **CSV Import** — Import tasks from CSV with downloadable sample template
@@ -52,35 +52,83 @@ A footer meeting reminder bar that appears automatically:
 
 ## Installation
 
-### From Release (Recommended)
+### Prerequisites
 
-1. Download the latest `.zip` from the `releases/` folder
-2. Unzip to a local folder
-3. Open `chrome://extensions` (or `edge://extensions`)
-4. Enable **Developer mode**
-5. Click **Load unpacked** and select the unzipped folder
+- **Node.js 18+** and npm (only needed for building from source)
+- A **Jira Cloud** instance (`.atlassian.net`) you are logged into
+- (Optional) A **Tempo** API token for time tracking and a **Microsoft Edge** browser for calendar reminders
 
-### From Source
+### Option A — From Release (Recommended)
+
+1. Download the latest `.zip` from the `releases/` folder.
+2. Unzip it to a local folder (e.g. `~/jira-task-plus-build`).
+3. Open the extensions page for your browser:
+   - Chrome: `chrome://extensions`
+   - Edge: `edge://extensions`
+4. Enable **Developer mode** (toggle in the top-right corner).
+5. Click **Load unpacked** and select the unzipped `build/` folder.
+6. Open any Jira issue page — the **Bulk Add** button now appears in the issue header.
+
+> No build step is required for release installs. The zipped artifact already contains the bundled, obfuscated extension.
+
+### Option B — From Source
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/jira-task-plus.git
+# 1. Clone the repository
+git clone https://github.com/anishTPM/JiraTaskPlus-Plugin.git
 cd jira-task-plus
+
+# 2. Install dependencies
 npm install
+
+# 3. Configure your organization (see Configuration below)
+cp src/org-config-template.js src/org-config.js
+# then edit src/org-config.js with your Jira/Confluence details
+
+# 4. Build the extension (outputs to build/ and releases/)
 npm run build
+
+# 5. Load unpacked — select the generated build/ folder (see Option A, steps 3–5)
 ```
 
-Then load the `build/` folder as an unpacked extension.
+For development with automatic rebuilds (no obfuscation):
 
-## Configuration
+```bash
+npm run watch
+```
 
-Edit `src/org-config.js` to configure for your Jira instance:
+### Configuration
 
-1. Set your `JIRA_BASE_URL` for each environment
-2. Update `CUSTOM_FIELDS` with your instance's field IDs
-3. Set `CONFLUENCE_BASE_URL`, `CONFLUENCE_PAGE_ID`, `CONFLUENCE_SPACE_KEY` for analytics sync
-4. Adjust `SHARED` settings (issue types, financial categories, etc.)
+`src/org-config.js` is **gitignored** and must be created locally — it is never committed. Copy the template and edit it:
+
+```bash
+cp src/org-config-template.js src/org-config.js
+```
+
+Then edit `src/org-config.js` to match your Jira instance:
+
+1. Set `JIRA_BASE_URL` for each environment (production / staging).
+2. Update `CUSTOM_FIELDS` with your instance's field IDs (only the active fields are required).
+3. Set `CONFLUENCE_BASE_URL`, `CONFLUENCE_PAGE_ID`, `CONFLUENCE_SPACE_KEY` if you want analytics sync.
+4. Adjust `SHARED` settings (issue types, financial categories, etc.).
 
 The extension auto-detects which environment to use based on the current page URL.
+
+> **Important:** Never commit `src/org-config.js` — it may contain tenant-specific URLs and IDs. Use `src/org-config-template.js` as the shared reference.
+
+### Post-install Setup
+
+- **Tempo timer:** Right-click the extension icon → **Options** → Tracker tab → paste your Tempo API token and save. Reload any open tab afterward.
+- **Calendar reminders (Edge only):** Options → Calendar tab → enable the toggle, save, reload a tab, and make sure you are signed into Outlook in Edge.
+- **Analytics:** Open Options → Analytics to view stats; opening it also syncs a row to the configured Confluence page.
+
+### Troubleshooting
+
+- **Button missing on a Jira page:** Confirm you are on an issue page (`/browse/KEY`) and that the extension is enabled; reload the tab.
+- **Build fails:** Delete `node_modules/` and `build/`, then re-run `npm install` and `npm run build`.
+- **Tempo "No token" error:** Re-enter the Tempo token in Options → Tracker and reload the tab.
+- **Calendar not working in Chrome:** Calendar integration requires Microsoft Edge (Chrome encrypts the auth tokens used by the relay).
+
 
 ## Project Structure
 
@@ -92,12 +140,10 @@ The extension auto-detects which environment to use based on the current page UR
 │   │   ├── calendar-background.js  # Token extraction + fetch proxy
 │   │   └── calendar-relay.js       # Content script bridge
 │   ├── modal/               # Bulk task creation modal UI
-│   ├── popup/               # Extension popup
 │   ├── settings/            # Admin panel (Org Configs, Analytics, Tracker, Calendar)
 │   ├── tracker/             # Time tracker (feature-flagged)
 │   │   ├── tracker-widget.js       # Orchestrator (entry point)
 │   │   ├── tracker-background.js   # Timer + API proxy in service worker
-│   │   ├── tempo-api.js            # Tempo Cloud API client
 │   │   └── widget/                 # Modular SOLID architecture
 │   │       ├── rail-styles.js      # CSS (Single Responsibility)
 │   │       ├── rail-dom.js         # DOM template
@@ -107,12 +153,14 @@ The extension auto-detects which environment to use based on the current page UR
 │   │       └── log-controller.js   # Worklog form + Tempo submit
 │   ├── background.js        # Service worker
 │   ├── content.js           # Content script (injected into Jira pages)
-│   ├── org-config.js        # Organization & environment config
+│   ├── org-config.js        # Organization & environment config (gitignored)
+│   ├── org-config-template.js # Template for org config
 │   └── styles.css           # Tailwind CSS source
 ├── scripts/build.js         # Build script (bundle, obfuscate, zip)
 ├── manifest.json            # Chrome Extension Manifest V3
 ├── rollup.config.js         # Rollup bundler config
 ├── features.html            # Single-page feature showcase
+├── installation.html        # Installation instructions
 └── package.json
 ```
 

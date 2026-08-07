@@ -1,6 +1,8 @@
 // Single Responsibility: Jira API communication, task fetching, and recent tasks tracking.
 // Dependency Inversion: Depends on abstract messaging (chrome.runtime.sendMessage).
 
+import ORG_CONFIG from '../../org-config.js';
+
 const MAX_FETCH = 30;
 const MAX_RECENT = 5;
 const RECENT_KEY = 'jtp-recent-tasks';
@@ -22,9 +24,9 @@ export function jiraFetch(url, method = 'GET', body = null) {
 
 export async function getJiraBaseUrl() {
   return new Promise(r => {
-    if (!isExtensionValid()) { r('https://teneritycloud.atlassian.net'); return; }
+    if (!isExtensionValid()) { r(ORG_CONFIG.JIRA_BASE_URL); return; }
     chrome.storage.local.get('jtp-tracker-jira-base', (res) => {
-      r(res['jtp-tracker-jira-base'] || 'https://teneritycloud.atlassian.net');
+      r(res['jtp-tracker-jira-base'] || ORG_CONFIG.JIRA_BASE_URL);
     });
   });
 }

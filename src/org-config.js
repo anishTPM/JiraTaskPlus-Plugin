@@ -10,36 +10,13 @@
 
 const ENVIRONMENTS = {
   production: {
-    JIRA_BASE_URL: 'https://teneritycloud.atlassian.net',
-    CONFLUENCE_BASE_URL: 'https://teneritycloud.atlassian.net/wiki/rest/api/content',
-    CONFLUENCE_PAGE_ID: '476413971',
-    CONFLUENCE_SPACE_KEY: 'TPMT',
+    JIRA_BASE_URL: 'https://anish3d.atlassian.net',
+    CONFLUENCE_BASE_URL: 'https://anish3d.atlassian.net/wiki/rest/api/content',
+    CONFLUENCE_PAGE_ID: '425985',
+    CONFLUENCE_SPACE_KEY: 'TPM',
     CUSTOM_FIELDS: {
       FINANCIAL_CATEGORY: 'customfield_10195',
       STORY_POINTS: 'customfield_10058',
-      TARGET_START: 'customfield_10022',
-      TARGET_END: 'customfield_10023',
-      EPIC_LINK: 'customfield_10014',
-      EPIC_LINK_ALT: 'customfield_10000',
-      PARENT_LINK: 'parent',
-      PARENT_LINK_ALT: 'customfield_16400',
-      SPRINT: 'customfield_10020',
-    },
-  },
-  staging: {
-    JIRA_BASE_URL: 'https://tenerity-staging.atlassian.net',
-    CONFLUENCE_BASE_URL: 'https://tenerity-staging.atlassian.net/wiki/rest/api/content',
-    CONFLUENCE_PAGE_ID: '',
-    CONFLUENCE_SPACE_KEY: 'TPMT',
-    CUSTOM_FIELDS: {
-      FINANCIAL_CATEGORY: 'customfield_10141',
-      STORY_POINTS: 'customfield_10107', // not on Task screen — update when correct field found
-      TARGET_START: 'customfield_10022',
-      TARGET_END: 'customfield_10023',
-      EPIC_LINK: 'customfield_10014',
-      EPIC_LINK_ALT: 'customfield_10000',
-      PARENT_LINK: 'parent',
-      PARENT_LINK_ALT: 'customfield_16400',
       SPRINT: 'customfield_10020',
     },
   },
@@ -54,14 +31,7 @@ const SHARED = {
     BUG: 'Bug',
     STORY: 'Story',
     EPIC: 'Epic',
-    PROGRAM: 'Program',
-  },
-  FINANCIAL_CATEGORY_OPTIONS: [
-    'Capitalised',
-    'Expensed',
-    'Non-Capitalised',
-    'Oversight-OpEx',
-  ],
+  }
 };
 
 function detectEnvironment() {

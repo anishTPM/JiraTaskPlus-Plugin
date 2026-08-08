@@ -1,20 +1,25 @@
 {
   "manifest_version": 3,
   "name": "Jira Task Plus",
-  "version": "2.0.0",
+  "version": "2.2.0",
   "description": "Bulk create Jira tasks from Story and Epic pages.",
   "permissions": [
     "activeTab",
+    "identity",
     "storage",
     "tabs",
     "contextMenus",
     "alarms",
-    "scripting",
     "notifications"
   ],
   "host_permissions": [
     "<all_urls>",
-    "*://outlook.cloud.microsoft/*"
+    "https://outlook.live.com/*",
+    "https://outlook.office.com/*",
+    "https://outlook.office365.com/*",
+    "https://outlook.cloud.microsoft/*",
+    "https://login.microsoftonline.com/*",
+    "https://graph.microsoft.com/*"
   ],
   "content_scripts": [
     {
@@ -27,16 +32,6 @@
     {
       "matches": ["<all_urls>"],
       "js": ["tracker/tracker-widget.js"],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": [
-        "*://outlook.office.com/*",
-        "*://outlook.office365.com/*",
-        "*://outlook.cloud.microsoft/*",
-        "*://outlook.live.com/*"
-      ],
-      "js": ["calendar/calendar-relay.js"],
       "run_at": "document_idle"
     }
   ],
@@ -54,10 +49,6 @@
     {
       "resources": ["modal/modal.html", "modal/modal.js", "assets/styles.css", "assets/icon16.png"],
       "matches": ["*://*.atlassian.net/*"]
-    },
-    {
-      "resources": ["calendar/calendar-relay.js"],
-      "matches": ["*://outlook.office.com/*", "*://outlook.office365.com/*", "*://outlook.cloud.microsoft/*"]
     }
   ],
   "icons": {

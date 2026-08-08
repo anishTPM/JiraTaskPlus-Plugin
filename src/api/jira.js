@@ -38,6 +38,17 @@ export async function getBoardSprints(boardId) {
   ];
 }
 
+export async function getAllProjectSprints(projectKey) {
+  const boards = await getProjectBoards(projectKey);
+  const boardIds = (boards.values || []).map(b => b.id);
+  if (!boardIds.length) return [];
+  const sprintSets = await Promise.all(boardIds.map(id => getBoardSprints(id)));
+  const all = sprintSets.flat();
+  const unique = new Map();
+  all.forEach(s => { if (!unique.has(s.id)) unique.set(s.id, s); });
+  return Array.from(unique.values()).sort((a, b) => (a.state === 'active' ? -1 : 1));
+}
+
 export async function searchUsers(query, projectKey) {
   // Use empty query to get all users, increase maxResults
   const q = query || '';
@@ -86,17 +97,6 @@ export async function createIssue(payload) {
   return jiraFetch('/rest/api/3/issue', {
     method: 'POST',
     body: JSON.stringify(payload),
-  });
-}
-
-export async function createIssueLink(inwardIssueKey, outwardIssueKey) {
-  return jiraFetch('/rest/api/3/issueLink', {
-    method: 'POST',
-    body: JSON.stringify({
-      type: { name: ORG_CONFIG.ISSUE_LINK_TYPE },
-      inwardIssue: { key: inwardIssueKey },
-      outwardIssue: { key: outwardIssueKey },
-    }),
   });
 }
 

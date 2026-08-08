@@ -33,7 +33,8 @@ document.getElementById('cfg-env').textContent = ORG_CONFIG._ENV || 'production'
 document.getElementById('cfg-base-url').textContent = ORG_CONFIG.JIRA_BASE_URL;
 document.getElementById('cfg-confluence-url').textContent = ORG_CONFIG.CONFLUENCE_BASE_URL || 'Not configured';
 document.getElementById('cfg-confluence-space').textContent = ORG_CONFIG.CONFLUENCE_SPACE_KEY || 'N/A';
-document.getElementById('cfg-link-type').textContent = ORG_CONFIG.ISSUE_LINK_TYPE;
+document.getElementById('calendar-page-url').textContent = ORG_CONFIG.OUTLOOK_CALENDAR_URL || 'Not configured';
+document.getElementById('calendar-client-id').textContent = ORG_CONFIG.MICROSOFT_OAUTH_CLIENT_ID || 'Not configured';
 
 const fieldsEl = document.getElementById('cfg-fields');
 Object.entries(ORG_CONFIG.CUSTOM_FIELDS).forEach(([key, value]) => {
@@ -178,7 +179,6 @@ async function syncToConfluence(data) {
 
     const totalMinutes = calculateTimeSaved(data);
     const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
-    const bulkTasks = (data.history || []).filter(h => h.method !== 'timer').reduce((s, h) => s + (h.count || 0), 0);
     const timerLogs = data.timerLogs || 0;
 
     // Fetch existing page
@@ -188,9 +188,9 @@ async function syncToConfluence(data) {
     let body = page.body.storage.value || '';
 
     // Header row
-    const headerRow = `<tr><th>User Email</th><th>Total Tasks Created</th><th>Bulk Tasks</th><th>Total Timer Worklogs</th><th>Last Updated</th></tr>`;
+    const headerRow = `<tr><th>User</th><th>Total Task Created</th><th>Total Timer Worklog</th><th>Total Time Saved</th><th>Last Updated</th></tr>`;
     // Data row cells
-    const cells = `<td>${escHtml(email)}</td><td>${data.totalTasks}</td><td>${bulkTasks}</td><td>${timerLogs}</td><td>${now}</td>`;
+    const cells = `<td>${escHtml(email)}</td><td>${data.totalTasks}</td><td>${timerLogs}</td><td>${totalMinutes}</td><td>${now}</td>`;
 
     const emailEscaped = escHtml(email).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const rowRegex = new RegExp(`<tr[^>]*>[\\s\\S]*?${emailEscaped}[\\s\\S]*?<\/tr>`, 'i');
@@ -289,13 +289,25 @@ document.getElementById('save-tracker').addEventListener('click', () => {
 });
 
 // ── Calendar Settings ───────────────────────────────────────────────────────
-const isEdge = navigator.userAgent.includes('Edg/');
+const CALENDAR_INTEGRATION_ENABLED = false;
+
+function enforceCalendarDisabled() {
+  const calendarToggle = document.getElementById('calendar-enabled');
+  if (calendarToggle) calendarToggle.checked = false;
+  document.querySelectorAll('#page-calendar input, #page-calendar button, #page-calendar select, #page-calendar textarea')
+    .forEach(control => { control.disabled = true; });
+
+  chrome.storage.local.get('jtp-features', (res) => {
+    const features = res['jtp-features'] || {};
+    if (!features.calendar) return;
+    features.calendar = false;
+    chrome.storage.local.set({ 'jtp-features': features });
+  });
+}
 
 function loadCalendarSettings() {
-  if (!isEdge) {
-    document.getElementById('calendar-edge-notice').style.display = 'block';
-    document.getElementById('calendar-controls').style.opacity = '0.4';
-    document.getElementById('calendar-controls').style.pointerEvents = 'none';
+  if (!CALENDAR_INTEGRATION_ENABLED) {
+    enforceCalendarDisabled();
     return;
   }
   chrome.storage.local.get(['jtp-features', 'jtp-calendar-filters', 'jtp-calendar-cache'], (res) => {
@@ -312,7 +324,10 @@ function loadCalendarSettings() {
       renderCachedEvents(cache.events, filters);
     }
   });
+  refreshCalendarAuthStatus();
 }
+
+enforceCalendarDisabled();
 
 document.getElementById('save-calendar').addEventListener('click', () => {
   const enabled = document.getElementById('calendar-enabled').checked;
@@ -334,25 +349,59 @@ document.getElementById('save-calendar').addEventListener('click', () => {
   });
 });
 
-document.getElementById('debug-calendar').addEventListener('click', async () => {
-  const statusEl = document.getElementById('calendar-test-status');
-  statusEl.textContent = '⏳ Reading Outlook localStorage...';
-  statusEl.style.color = '#1e40af';
-  chrome.runtime.sendMessage({ type: 'JTP_CALENDAR_DEBUG' }, (res) => {
-    if (chrome.runtime.lastError || res?.error) {
-      statusEl.textContent = `❌ ${res?.error || chrome.runtime.lastError?.message}`;
+function refreshCalendarAuthStatus() {
+  const statusEl = document.getElementById('calendar-auth-status');
+  chrome.runtime.sendMessage({ type: 'JTP_CALENDAR_AUTH_STATUS' }, (res) => {
+    if (chrome.runtime.lastError || !res?.ok) {
+      statusEl.textContent = `❌ ${res?.error || chrome.runtime.lastError?.message || 'Unable to read connection status'}`;
       statusEl.style.color = '#991b1b';
       return;
     }
-    console.log('[JTP Debug] msal.3| entries:');
-    res.forEach(e => console.log(JSON.stringify(e)));
-    statusEl.textContent = `🔍 ${res.length} msal.3| keys logged to console (F12 → expand each line).`;
-    statusEl.style.color = '#92400e';
+    document.getElementById('calendar-redirect-url').textContent = res.redirectUrl;
+    if (!res.configured) {
+      statusEl.textContent = 'OAuth client ID not configured';
+      statusEl.style.color = '#92400e';
+    } else if (res.connected) {
+      statusEl.textContent = `✅ Connected${res.account ? ` as ${res.account}` : ''}`;
+      statusEl.style.color = '#166534';
+    } else {
+      statusEl.textContent = 'Not connected';
+      statusEl.style.color = '#64748b';
+    }
+  });
+}
+
+document.getElementById('connect-calendar').addEventListener('click', () => {
+  const statusEl = document.getElementById('calendar-auth-status');
+  statusEl.textContent = '⏳ Waiting for Microsoft sign-in...';
+  statusEl.style.color = '#1e40af';
+  chrome.runtime.sendMessage({ type: 'JTP_CALENDAR_CONNECT' }, (res) => {
+    if (chrome.runtime.lastError || !res?.ok) {
+      statusEl.textContent = `❌ ${res?.error || chrome.runtime.lastError?.message || 'Microsoft sign-in failed'}`;
+      statusEl.style.color = '#991b1b';
+      return;
+    }
+    refreshCalendarAuthStatus();
   });
 });
 
+document.getElementById('disconnect-calendar').addEventListener('click', () => {
+  chrome.runtime.sendMessage({ type: 'JTP_CALENDAR_DISCONNECT' }, refreshCalendarAuthStatus);
+});
+
 document.getElementById('open-outlook').addEventListener('click', () => {
-  chrome.tabs.create({ url: 'https://outlook.cloud.microsoft/calendar', active: true });
+  const statusEl = document.getElementById('calendar-fetch-status');
+  statusEl.textContent = '⏳ Opening Outlook Calendar...';
+  statusEl.style.color = '#1e40af';
+  chrome.runtime.sendMessage({ type: 'JTP_CALENDAR_OPEN', url: ORG_CONFIG.OUTLOOK_CALENDAR_URL }, (res) => {
+    if (chrome.runtime.lastError || !res?.ok) {
+      statusEl.textContent = `❌ ${res?.error || chrome.runtime.lastError?.message || 'Failed to open Outlook Calendar'}`;
+      statusEl.style.color = '#991b1b';
+      return;
+    }
+    statusEl.textContent = '✅ Outlook Calendar connected';
+    statusEl.style.color = '#166534';
+  });
 });
 
 function renderCachedEvents(events, filters) {
@@ -391,25 +440,32 @@ function renderCachedEvents(events, filters) {
   }).join('');
 }
 
-document.getElementById('test-calendar').addEventListener('click', () => {
+document.getElementById('test-calendar').addEventListener('click', async () => {
   const statusEl = document.getElementById('calendar-fetch-status');
   statusEl.textContent = '⏳ Fetching...';
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString();
-  const url = `https://outlook.office.com/api/v2.0/me/calendarview?startDateTime=${startOfDay}&endDateTime=${endOfDay}&$orderby=start/dateTime&$top=20`;
-  chrome.runtime.sendMessage({ type: 'JTP_CALENDAR_FETCH', url }, (res) => {
-    if (chrome.runtime.lastError || !res?.ok) {
-      statusEl.textContent = `❌ ${res?.error || chrome.runtime.lastError?.message || 'Failed'}`;
-      return;
-    }
-    const events = res.data.value || res.data.CalendarEvents || res.data.CalendarView || [];
-    // Cache events with timestamp
+  statusEl.style.color = '#1e40af';
+  try {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString();
+    const res = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ type: 'JTP_CALENDAR_FETCH', startDateTime: startOfDay, endDateTime: endOfDay }, (r) => {
+        if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
+        else if (!r || !r.ok) reject(new Error(r?.error || 'Fetch failed'));
+        else resolve(r.data);
+      });
+    });
+    const events = res.value || res.CalendarEvents || res.CalendarView || [];
     chrome.storage.local.set({ 'jtp-calendar-cache': { events, fetchedAt: new Date().toISOString() } });
     const filters = {
       skipAllDay: document.getElementById('filter-allday').checked,
       blocklist: document.getElementById('filter-blocklist').value.split(',').map(s => s.trim()).filter(Boolean),
     };
     renderCachedEvents(events, filters);
-  });
+    statusEl.textContent = `✅ ${events.length} event(s) loaded`;
+    statusEl.style.color = '#166534';
+  } catch (e) {
+    statusEl.textContent = `❌ ${e.message}`;
+    statusEl.style.color = '#991b2b';
+  }
 });

@@ -4,9 +4,9 @@ import {
   getIssue,
   getProjectBoards,
   getBoardSprints,
+  getAllProjectSprints,
   searchUsers,
   createIssue,
-  createIssueLink,
   addIssueToSprint,
   getFinancialCategoryOptions,
   getProjectLabels,
@@ -16,7 +16,6 @@ import {
 } from '../api/jira.js';
 
 const CF = ORG_CONFIG.CUSTOM_FIELDS;
-const SP_PER_HOUR = ORG_CONFIG.STORY_POINTS_PER_HOUR || 1;
 
 const state = {
   issueKey: null,
@@ -80,7 +79,7 @@ async function loadContext() {
       epicEl.innerHTML = `<span class="icon">⚡</span> Epic: <b>${state.issueKey}</b> — ${escapeHtml(epicSummary)}`;
       document.getElementById('story-selection').classList.remove('hidden');
       await loadStoriesUnderEpic(state.issueKey);
-
+      state.parentKey = state.issueKey;
     } else {
       state.storyKey = state.issueKey;
       state.storyData = state.issueData;
@@ -88,6 +87,7 @@ async function loadContext() {
       const storyEl = document.getElementById('ctx-story');
       storyEl.classList.remove('hidden');
       storyEl.innerHTML = `<span class="icon">📋</span> Story: <b>${state.issueKey}</b> — ${escapeHtml(storySummary)}`;
+      state.parentKey = state.issueData?.fields?.parent?.key || null;
     }
 
     await Promise.all([loadBoards(), loadUsers(), loadFinancialCategories(), loadExistingLabels()]);
@@ -203,7 +203,13 @@ async function loadBoards() {
       updateDropdownValue(container, saved);
       const opt = state.boards.find(b => String(b.id) === String(saved));
       if (opt) container.querySelector('.dropdown-search').value = opt.name;
+    }
+
+    if (state.boards.length) {
       await onBoardChange();
+    } else {
+      state.sprints = await getAllProjectSprints(state.projectKey);
+      refreshSprintDropdowns();
     }
   } catch (e) {}
 }
@@ -231,7 +237,7 @@ function refreshSprintDropdowns() {
   });
 }
 
-function renderSearchableDropdown(container, name, options, placeholder, onChange) {
+function renderSearchableDropdown(container, name, options, placeholder, onChange, allowCustom = false) {
   const current = container.querySelector('.dropdown-value')?.value;
   container.innerHTML = `
     <div class="relative">
@@ -248,12 +254,43 @@ function renderSearchableDropdown(container, name, options, placeholder, onChang
   function filterAndShow(search = '') {
     const filtered = options.filter(o => o.label.toLowerCase().includes(search.toLowerCase()));
     list.innerHTML = filtered.map(o => `<li data-value="${o.value}">${o.label}</li>`).join('');
-    if (!filtered.length) list.innerHTML = '<li class="opacity-50">No results</li>';
+    if (!filtered.length) list.innerHTML = allowCustom ? '<li class="opacity-50">Press Enter to use custom value</li>' : '<li class="opacity-50">No results</li>';
     list.classList.remove('hidden');
   }
 
   searchInput.addEventListener('focus', () => filterAndShow(searchInput.value));
   searchInput.addEventListener('input', () => filterAndShow(searchInput.value));
+
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const val = searchInput.value.trim();
+      const match = options.find(o => o.label.toLowerCase() === val.toLowerCase());
+      if (match) {
+        hiddenInput.value = match.value;
+        searchInput.value = match.label;
+        list.classList.add('hidden');
+        if (onChange) onChange();
+      } else if (allowCustom && val) {
+        hiddenInput.value = `custom:${val}`;
+        searchInput.value = val;
+        list.classList.add('hidden');
+        if (onChange) onChange();
+      }
+    }
+  });
+
+  searchInput.addEventListener('blur', () => {
+    const val = searchInput.value.trim();
+    const match = options.find(o => o.label.toLowerCase() === val.toLowerCase());
+    if (match) {
+      hiddenInput.value = match.value;
+      searchInput.value = match.label;
+    } else if (allowCustom && val && !hiddenInput.value) {
+      hiddenInput.value = `custom:${val}`;
+    }
+    list.classList.add('hidden');
+  });
 
   list.addEventListener('click', (e) => {
     const li = e.target.closest('li[data-value]');
@@ -302,7 +339,6 @@ function addRow(data = {}) {
     description: data.description || '',
     estimate: data.estimate || '',
     remaining: data.remaining || data.estimate || '',
-    storyPoints: data.storyPoints || '',
     labels: data.labels || prev?.labels || '',
     financialCategory: data.financialCategory || prev?.financialCategory || '',
     assignee: data.assignee || prev?.assignee || state.currentUser?.accountId || '',
@@ -332,7 +368,6 @@ function renderRow(row) {
     <div class="task-row-expanded">
       <input class="field-input" style="flex:2; min-width:160px" data-field="description" value="${esc(row.description)}" placeholder="Description" />
       <input class="field-input" style="width:60px" data-field="remaining" type="number" min="0" value="${esc(row.remaining)}" placeholder="Rem. *" title="Remaining (hours)" />
-      <input class="field-input" style="width:50px" data-field="storyPoints" type="number" min="0" value="${esc(row.storyPoints)}" placeholder="SP" title="Story Points (auto from Est.)" readonly />
       <div class="labels-container" style="flex:1; min-width:160px; position:relative"></div>
     </div>
   `;
@@ -368,11 +403,14 @@ function renderRow(row) {
 
   // Sprint
   const sprintContainer = el.querySelector('.sprint-dropdown');
-  const sprintOptions = state.sprints.map(s => ({ value: s.id, label: `${s.state === 'active' ? '🟢' : '🔵'} ${s.name}` }));
-  renderSearchableDropdown(sprintContainer, 'sprintId', [{ value: '', label: '-- Sprint --' }, ...sprintOptions], '-- Sprint --');
+  const sprintOptions = state.sprints.map(s => ({ value: String(s.id), label: `${s.state === 'active' ? '🟢' : '🔵'} ${s.name}` }));
+  renderSearchableDropdown(sprintContainer, 'sprintId', [{ value: '', label: '-- Sprint (optional) --' }, ...sprintOptions], '-- Sprint (optional) --', null, true);
   if (row.sprintId) {
     const opt = sprintOptions.find(o => String(o.value) === String(row.sprintId));
     if (opt) { sprintContainer.querySelector('.dropdown-search').value = opt.label; updateDropdownValue(sprintContainer, row.sprintId); }
+    else if (String(row.sprintId).startsWith('custom:')) {
+      sprintContainer.querySelector('.dropdown-search').value = String(row.sprintId).slice(7);
+    }
   }
   trackDropdownChange(sprintContainer, row, 'sprintId');
 
@@ -385,16 +423,6 @@ function renderRow(row) {
     input.addEventListener('input', (e) => {
       const field = e.target.dataset.field;
       row[field] = e.target.value;
-
-      if (field === 'estimate') {
-        const hours = parseFloat(e.target.value) || 0;
-        // Auto-fill remaining
-        row.remaining = e.target.value;
-        el.querySelector('[data-field="remaining"]').value = e.target.value;
-        // Auto-calculate SP
-        row.storyPoints = hours * SP_PER_HOUR;
-        el.querySelector('[data-field="storyPoints"]').value = row.storyPoints || '';
-      }
     });
   });
 
@@ -508,7 +536,6 @@ async function createAll() {
   for (const row of state.rows) {
     try {
       const issue = await createIssue(buildPayload(row));
-      if (state.storyKey) await createIssueLink(issue.key, state.storyKey);
       if (row.sprintId) {
         if (!sprintGroups[row.sprintId]) sprintGroups[row.sprintId] = [];
         sprintGroups[row.sprintId].push(issue.key);
@@ -523,7 +550,18 @@ async function createAll() {
 
   let sprintAssignedCount = 0;
   for (const [sprintId, keys] of Object.entries(sprintGroups)) {
-    try { await addIssueToSprint(sprintId, keys); sprintAssignedCount += keys.length; } catch (e) {}
+    const resolvedId = String(sprintId);
+    if (resolvedId.startsWith('custom:')) {
+      const customName = resolvedId.slice(7);
+      const match = state.sprints.find(s => s.name.toLowerCase() === customName.toLowerCase());
+      if (match) {
+        try { await addIssueToSprint(match.id, keys); sprintAssignedCount += keys.length; } catch (e) {}
+      } else {
+        console.warn('JTP: Could not resolve custom sprint:', customName);
+      }
+    } else {
+      try { await addIssueToSprint(resolvedId, keys); sprintAssignedCount += keys.length; } catch (e) {}
+    }
   }
 
   // Track analytics
@@ -548,21 +586,25 @@ function buildPayload(row) {
     project: { key: state.projectKey },
     issuetype: { name: ORG_CONFIG.ISSUE_TYPES.TASK },
     summary: row.title,
-    timetracking: {
-      originalEstimate: `${row.estimate}h`,
-      remainingEstimate: `${row.remaining}h`,
-    },
     assignee: { accountId: row.assignee },
   };
+
+  if (state.parentKey) {
+    fields.parent = { key: state.parentKey };
+  }
+
+  const estimateHours = parseFloat(row.estimate);
+  const remainingHours = parseFloat(row.remaining);
+  if (estimateHours > 0 || remainingHours > 0) {
+    const tt = {};
+    if (estimateHours > 0) tt.originalEstimate = `${estimateHours}h`;
+    if (remainingHours > 0) tt.remainingEstimate = `${remainingHours}h`;
+    fields.timetracking = tt;
+  }
 
   // Only set optional fields if they have values
   if (row.financialCategory) {
     fields[CF.FINANCIAL_CATEGORY] = { value: row.financialCategory };
-  }
-
-  const sp = parseFloat(row.storyPoints) || parseFloat(row.estimate) * SP_PER_HOUR || 0;
-  if (sp > 0 && CF.STORY_POINTS) {
-    fields[CF.STORY_POINTS] = sp;
   }
 
   if (row.description && row.description.trim()) {
@@ -594,7 +636,6 @@ function validateRows() {
     const missing = [];
     if (!r.title.trim()) missing.push('Title');
     if (!r.estimate) missing.push('Estimate');
-    if (!r.financialCategory) missing.push('Financial Category');
     if (!r.assignee) missing.push('Assignee');
     if (missing.length) {
       statusEl.textContent = `Row ${i + 1}: missing ${missing.join(', ')}`;

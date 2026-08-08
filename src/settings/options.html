@@ -87,12 +87,12 @@
           <span class="icon">🎯</span> Tracker
         </div>
         <div class="nav-item" data-page="calendar">
-          <span class="icon">📅</span> Calendar
+          <span class="icon">📅</span> Calendar Events
         </div>
       </nav>
       <div class="sidebar-footer">
         <button id="theme-toggle" style="background:rgba(255,255,255,0.08); border:1px solid #334155; border-radius:8px; color:#94a3b8; font-size:12px; font-weight:600; cursor:pointer; padding:7px 14px; width:100%; margin-bottom:8px; transition:all 0.15s;">🌙 Dark Mode</button>
-        v1.6.0 · Jira Task Plus by Anish
+        v2.2.0 · Jira Task Plus by Anish
       </div>
     </aside>
 
@@ -125,10 +125,8 @@
           </div>
 
           <div class="config-card">
-            <h3>🔗 Issue Configuration</h3>
+            <h3>🔧 Task Configuration</h3>
             <div class="config-grid">
-              <span class="label">Link Type</span>
-              <span class="value" id="cfg-link-type"></span>
               <span class="label">Financial Categories</span>
               <span class="value" id="cfg-fc-options"></span>
             </div>
@@ -321,54 +319,60 @@
       <!-- Calendar Settings Page -->
       <div id="page-calendar" class="page">
         <div class="page-header">
-          <h2>📅 Calendar Integration</h2>
-          <p>Connect Outlook Calendar to see upcoming meetings and log time against Jira issues.</p>
+          <h2>📅 Calendar Events</h2>
+          <p>Open Outlook Calendar, load today's events, and control meeting reminders.</p>
         </div>
         <div class="page-body">
-          <!-- Edge-only notice (shown/hidden by JS) -->
-          <div id="calendar-edge-notice" style="display:none; background:#fffbeb; border:1px solid #fcd34d; border-radius:12px; padding:16px 20px; margin-bottom:16px;">
-            <div style="font-size:14px; font-weight:700; color:#92400e; margin-bottom:6px;">🌐 Microsoft Edge Required</div>
-            <p style="font-size:13px; color:#78350f; margin:0 0 10px;">The Calendar integration only works in <strong>Microsoft Edge</strong> due to how Chrome encrypts authentication tokens, making them inaccessible to extensions.</p>
-            <p style="font-size:12px; color:#92400e; margin:0;">👉 Install the extension in Edge and use it there for calendar features: <a href="https://www.microsoft.com/edge" target="_blank" style="color:#1d4ed8;">Download Microsoft Edge</a></p>
+          <div style="background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:12px 16px; margin-bottom:16px; color:#92400e; font-size:13px; font-weight:600;">
+            Calendar integration is temporarily disabled.
           </div>
-
           <div id="calendar-controls">
             <div class="config-card">
               <h3>🔌 Feature Toggle</h3>
               <label style="display:flex; align-items:center; gap:10px; font-size:13px; cursor:pointer;">
-                <input type="checkbox" id="calendar-enabled" style="width:18px; height:18px; cursor:pointer;" />
-                Enable Calendar Integration (Outlook 365)
+                <input type="checkbox" id="calendar-enabled" style="width:18px; height:18px; cursor:not-allowed;" disabled />
+                Enable Calendar Integration
               </label>
-              <p style="font-size:11px; color:#94a3b8; margin:8px 0 0;">Requires you to be logged into Outlook/Office 365 in Edge. An Outlook tab will be opened automatically if needed.</p>
+              <p style="font-size:11px; color:#94a3b8; margin:8px 0 0;">Connect a Microsoft account with delegated Calendars.Read access.</p>
+            </div>
+
+            <div class="config-card">
+              <h3>🌐 Outlook Connection</h3>
+              <div class="config-grid">
+                <span class="label">Calendar Page</span>
+                <span class="value" id="calendar-page-url"></span>
+                <span class="label">OAuth Client</span>
+                <span class="value" id="calendar-client-id"></span>
+                <span class="label">Azure Redirect URI</span>
+                <span class="value" id="calendar-redirect-url"></span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px; margin-top:14px;">
+                <button id="connect-calendar" style="background:#cbd5e1; color:#64748b; border:none; border-radius:8px; padding:10px 16px; font-size:12px; font-weight:600; cursor:not-allowed;" disabled>Connect Microsoft Account</button>
+                <button id="disconnect-calendar" style="background:#f1f5f9; color:#94a3b8; border:1px solid #cbd5e1; border-radius:8px; padding:10px 16px; font-size:12px; font-weight:600; cursor:not-allowed;" disabled>Disconnect</button>
+                <span id="calendar-auth-status" style="font-size:12px; color:#64748b;"></span>
+              </div>
             </div>
 
             <div class="config-card">
               <h3>🚫 Event Filters</h3>
               <p style="font-size:12px; color:#64748b; margin-bottom:12px;">Control which calendar events trigger reminders. Filtered events are silently skipped.</p>
               <label style="display:flex; align-items:center; gap:10px; font-size:13px; cursor:pointer; margin-bottom:12px;">
-                <input type="checkbox" id="filter-allday" style="width:18px; height:18px; cursor:pointer;" checked />
+                <input type="checkbox" id="filter-allday" style="width:18px; height:18px; cursor:not-allowed;" checked disabled />
                 Skip all-day events (OOO, holidays, birthdays)
               </label>
               <div>
                 <label style="font-size:12px; font-weight:600; color:#475569; display:block; margin-bottom:6px;">Keyword blocklist (comma-separated)</label>
-                <input type="text" id="filter-blocklist" placeholder="OOO, Out of Office, Holiday, Birthday, Anniversary, Lunch" style="width:100%; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:12px; outline:none;" />
+                <input type="text" id="filter-blocklist" placeholder="OOO, Out of Office, Holiday, Birthday, Anniversary, Lunch" style="width:100%; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:12px; outline:none; cursor:not-allowed;" disabled />
                 <p style="font-size:11px; color:#94a3b8; margin:6px 0 0;">Events whose title contains any of these words will be hidden from reminders.</p>
               </div>
-            </div>
-
-            <div class="config-card">
-              <h3>🧪 Test Connection</h3>
-              <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Debug MSAL tokens in your Outlook tab to verify the integration is authenticated.</p>
-              <button id="debug-calendar" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:8px; padding:10px 16px; font-size:12px; font-weight:600; cursor:pointer;">🔍 Debug Tokens</button>
-              <span id="calendar-test-status" style="margin-left:12px; font-size:12px;"></span>
             </div>
 
             <div class="config-card">
               <h3>📋 Today's Events</h3>
               <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Events are cached and reloaded every time you click Reload. Open Outlook first if not already open.</p>
               <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-                <button id="test-calendar" style="background:linear-gradient(135deg,#6366f1,#3b82f6); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:13px; font-weight:600; cursor:pointer;">🔄 Reload Today's Events</button>
-                <button id="open-outlook" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:8px; padding:10px 16px; font-size:12px; font-weight:600; cursor:pointer;">🌐 Open Outlook</button>
+                <button id="test-calendar" style="background:#cbd5e1; color:#64748b; border:none; border-radius:8px; padding:10px 20px; font-size:13px; font-weight:600; cursor:not-allowed;" disabled>🔄 Reload Today's Events</button>
+                <button id="open-outlook" style="background:#f1f5f9; color:#94a3b8; border:1px solid #cbd5e1; border-radius:8px; padding:10px 16px; font-size:12px; font-weight:600; cursor:not-allowed;" disabled>🌐 Open Outlook</button>
                 <span id="calendar-fetch-status" style="font-size:12px; color:#64748b;"></span>
               </div>
               <div id="calendar-results">
@@ -381,7 +385,7 @@
               </div>
             </div>
 
-            <button id="save-calendar" style="background:linear-gradient(135deg,#6366f1,#3b82f6); color:#fff; border:none; border-radius:8px; padding:10px 24px; font-size:13px; font-weight:600; cursor:pointer; margin-top:8px;">💾 Save Calendar Settings</button>
+            <button id="save-calendar" style="background:#cbd5e1; color:#64748b; border:none; border-radius:8px; padding:10px 24px; font-size:13px; font-weight:600; cursor:not-allowed; margin-top:8px;" disabled>💾 Save Calendar Settings</button>
             <span id="calendar-save-status" style="margin-left:12px; font-size:12px; color:#16a34a;"></span>
           </div>
         </div>

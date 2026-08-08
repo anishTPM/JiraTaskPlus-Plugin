@@ -461,7 +461,7 @@
     <nav class="nav" aria-label="Feature sections">
       <a href="#new">What's new</a>
       <a href="#rail">Footer rail</a>
-      <a href="#calendar">Calendar</a>
+      <a href="#calendar">Calendar (disabled)</a>
       <a href="#tempo">Tempo</a>
       <a href="#architecture">Architecture</a>
     </nav>
@@ -470,7 +470,7 @@
   <main id="top" class="wrap">
     <section class="hero" data-parallax-section>
       <div class="hero-copy reveal">
-        <div class="eyebrow"><span class="pulse"></span> v2.0.0 · Chrome/Edge Extension</div>
+        <div class="eyebrow"><span class="pulse"></span> v2.2.0 · Chrome/Edge Extension</div>
         <h1><span class="gradient-text">Modern Jira admin, minus the repetitive work.</span></h1>
         <p class="lead">Bulk create Jira tasks, run a persistent footer timer, connect Outlook meetings to worklogs, and log directly to Tempo — with a sleek rail that stays useful without getting in the way.</p>
         <div class="hero-actions">
@@ -524,7 +524,7 @@
       <div class="section-head">
         <div>
           <div class="kicker">What's new</div>
-          <h2>v2.0.0 brings a streamlined bulk-creation core.</h2>
+          <h2>v2.2.0 strengthens bulk creation and task tracking.</h2>
         </div>
         <p>Search, track, link, minimise and log from one persistent footer experience. The design below keeps every new capability visible and scannable.</p>
       </div>
@@ -618,19 +618,19 @@
     <section id="calendar" class="section reveal">
       <div class="section-head">
         <div>
-          <div class="kicker">Calendar integration</div>
+          <div class="kicker">Calendar Events · temporarily disabled</div>
           <h2>Meeting-aware worklogs for Edge users.</h2>
         </div>
-        <p>Outlook reminders, filters and task linking help meetings become traceable work without forcing a separate admin routine.</p>
+        <p>The Calendar Events interface remains visible for future development, but all controls and runtime polling are disabled in v2.2.0.</p>
       </div>
       <div class="feature-grid stagger reveal">
-        <article class="feature-card wide tilt-card"><span class="badge edge">Edge only</span><h3 class="card-title">Outlook Meeting Reminders</h3><p class="card-copy">Polls every minute for meetings starting within 15 minutes and shows title, countdown and actions in the rail.</p><svg class="card-art" viewBox="0 0 300 190" fill="none" aria-hidden="true"><rect x="64" y="38" width="156" height="116" rx="28" fill="rgba(96,165,250,.16)" stroke="rgba(96,165,250,.42)"/><circle cx="143" cy="98" r="42" fill="rgba(34,211,238,.14)"/><path d="M143 72v29l22 16" stroke="#dbeafe" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg></article>
-        <article class="feature-card tilt-card"><span class="badge edge">Edge only</span><h3 class="card-title">Next Event Chip</h3><p class="card-copy">Shows the next upcoming event in compact mode, even while a timer is running.</p></article>
-        <article class="feature-card tilt-card"><span class="badge edge">Edge only</span><h3 class="card-title">Link & Start</h3><p class="card-copy">Open task picker from the meeting chip and start a timer with meeting title as the description.</p></article>
-        <article class="feature-card tilt-card"><span class="badge edge">Edge only</span><h3 class="card-title">Dismiss</h3><p class="card-copy">Hide a specific reminder so it does not reappear until the next event.</p></article>
-        <article class="feature-card tilt-card"><span class="badge edge">Edge only</span><h3 class="card-title">Skip All-Day Events</h3><p class="card-copy">Enabled by default to prevent full-day entries from becoming noise.</p></article>
-        <article class="feature-card tilt-card"><span class="badge edge">Edge only</span><h3 class="card-title">Keyword Blocklist</h3><p class="card-copy">Hide meetings matching configured terms like OOO, Holiday or Lunch.</p></article>
-        <article class="feature-card wide tilt-card"><span class="badge edge">Edge only</span><h3 class="card-title">MSAL Token Extraction + Test Connection</h3><p class="card-copy">Reads Outlook MSAL tokens through a content-script relay in Edge and offers a settings test view to verify token access and preview filtered events.</p></article>
+        <article class="feature-card wide tilt-card"><span class="badge">Disabled in v2.2.0</span><h3 class="card-title">Outlook Meeting Reminders</h3><p class="card-copy">The planned reminder flow remains documented, but it does not poll or display events in this release.</p><svg class="card-art" viewBox="0 0 300 190" fill="none" aria-hidden="true"><rect x="64" y="38" width="156" height="116" rx="28" fill="rgba(96,165,250,.16)" stroke="rgba(96,165,250,.42)"/><circle cx="143" cy="98" r="42" fill="rgba(34,211,238,.14)"/><path d="M143 72v29l22 16" stroke="#dbeafe" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg></article>
+        <article class="feature-card tilt-card"><span class="badge">Calendar</span><h3 class="card-title">Next Event Chip</h3><p class="card-copy">Shows the next upcoming event in compact mode, even while a timer is running.</p></article>
+        <article class="feature-card tilt-card"><span class="badge">Calendar</span><h3 class="card-title">Link & Start</h3><p class="card-copy">Open task picker from the meeting chip and start a timer with meeting title as the description.</p></article>
+        <article class="feature-card tilt-card"><span class="badge">Calendar</span><h3 class="card-title">Dismiss</h3><p class="card-copy">Hide a specific reminder so it does not reappear until the next event.</p></article>
+        <article class="feature-card tilt-card"><span class="badge">Calendar</span><h3 class="card-title">Skip All-Day Events</h3><p class="card-copy">Enabled by default to prevent full-day entries from becoming noise.</p></article>
+        <article class="feature-card tilt-card"><span class="badge">Calendar</span><h3 class="card-title">Keyword Blocklist</h3><p class="card-copy">Hide meetings matching configured terms like OOO, Holiday or Lunch.</p></article>
+        <article class="feature-card wide tilt-card"><span class="badge">Deferred</span><h3 class="card-title">Microsoft Sign-in</h3><p class="card-copy">The OAuth implementation remains in source for later validation, but its controls are disabled in v2.2.0.</p></article>
       </div>
     </section>
 
@@ -731,12 +731,13 @@
       <div class="section-head">
         <div>
           <div class="kicker">Changelog</div>
-          <h2>Release story from v1.0.0 to v2.0.0.</h2>
+          <h2>Release story from v1.0.0 to v2.2.0.</h2>
         </div>
         <p>A compact timeline makes the evolution of the extension easy to communicate.</p>
       </div>
       <div class="timeline">
-        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-card"><b>v2.0.0</b><span>Removed Program issue type and Ops Tasks import; cleaned up Epic/Program linking fields and simplified modal context detection.</span></div></div>
+        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-card"><b>v2.2.0</b><span>Automatic subtask loading, safer bulk-create payloads, optional sprint and financial category fields, parent assignment, revised Confluence analytics, and Calendar Events temporarily disabled.</span></div></div>
+        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-card"><b>v2.1.0</b><span>Removed Program issue type and Ops Tasks import; cleaned up Epic/Program linking fields and simplified modal context detection.</span></div></div>
         <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-card"><b>v1.5.0</b><span>Unified footer rail, search-first task picker, recent tasks, calendar filters, SOLID modular architecture, mini pill and meeting link flow.</span></div></div>
         <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-card"><b>v1.4.0</b><span>Outlook calendar integration, meeting reminders, Link & Start, cross-tab timer sync and calendar settings page.</span></div></div>
         <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-card"><b>v1.3.0</b><span>Floating time tracker widget, Tempo Cloud worklog integration, feature flags, configurable JQL and Shadow DOM isolation.</span></div></div>
@@ -747,7 +748,7 @@
     </section>
 
     <footer class="footer">
-      <b>Jira Task Plus v2.0.0</b> · Chrome/Edge Extension · MIT License
+       <b>Jira Task Plus v2.2.0</b> · Chrome/Edge Extension · MIT License
     </footer>
   </main>
 

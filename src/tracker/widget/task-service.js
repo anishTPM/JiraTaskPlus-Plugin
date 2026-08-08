@@ -36,8 +36,24 @@ export async function fetchTasks(jqlFilter) {
   const data = await jiraFetch(`${jiraBase}/rest/api/3/search/jql`, 'POST', {
     jql: jqlFilter,
     maxResults: MAX_FETCH,
-    fields: ['summary', 'parent', 'status', 'timetracking']
+    fields: ['summary', 'parent', 'status', 'timetracking', 'issuetype']
   });
+  const issues = data.issues || [];
+  console.log('[JTP] fetchTasks result:', issues.length, issues.map(i => `${i.key}:${i.fields?.issuetype?.name || '?'}:parent=${!!i.fields?.parent}`));
+  return issues;
+}
+
+export async function fetchSubtasks(parentKeys) {
+  if (!parentKeys.length) return [];
+  const jiraBase = await getJiraBaseUrl();
+  const jql = `parent in (${parentKeys.join(', ')}) AND issuetype = Subtask AND statusCategory != "Done"`;
+  console.log('[JTP] fetchSubtasks JQL:', jql);
+  const data = await jiraFetch(`${jiraBase}/rest/api/3/search/jql`, 'POST', {
+    jql,
+    maxResults: MAX_FETCH * 5,
+    fields: ['summary', 'parent', 'status', 'timetracking', 'issuetype']
+  });
+  console.log('[JTP] fetchSubtasks result:', data.issues?.length || 0, (data.issues || []).map(i => i.key));
   return data.issues || [];
 }
 

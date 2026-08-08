@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.2.0] - 2026-08-08
+
+### Added
+- Automatic loading of open subtasks for Story, Task, and Bug issues returned by the tracker JQL
+- Parent assignment in bulk task creation based on the source Epic or the Story's parent Epic
+- Configurable Outlook page URL and a dedicated Calendar Events settings page
+
+### Changed
+- Made sprint selection editable and optional in the bulk-add modal
+- Made Financial Category optional and removed Story Points from task creation
+- Removed estimate-to-story-points calculation and issue-link creation
+- Hardened time-tracking payload generation to omit invalid empty values
+- Updated Confluence analytics columns to User, Total Task Created, Total Timer Worklog, Total Time Saved, and Last Updated
+- Calendar Events controls and runtime polling are temporarily disabled pending further integration work
+- Production builds remain obfuscated
+
+## [2.1.0] - 2026-08-08
+
+### Added
+- **Automatic subtask loading** — tracker widget now fetches and displays open subtasks for parent issues returned by the configured JQL filter
+- **Supported Microsoft Calendar authentication** — Calendar Events now uses OAuth authorization code flow with PKCE and delegated Microsoft Graph `Calendars.Read` access
+
+### Changed
+- Re-enabled code obfuscation for production builds
+- Removed private Outlook MSAL token scraping, content-script relay authentication, and deprecated Outlook REST/OWA calendar calls
+
 ## [2.0.0] - 2026-08-07
 
 ### Added

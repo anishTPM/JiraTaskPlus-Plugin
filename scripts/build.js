@@ -26,7 +26,7 @@ console.log('📦 Bundling…');
 execSync('npx rollup -c --bundleConfigAsCjs', { cwd: root, stdio: 'inherit', env: { ...process.env, NODE_ENV: 'production' } });
 
 // ── 4. Obfuscate JS ────────────────────────────────────────────────────────
-const OBFUSCATE = false;
+const OBFUSCATE = true;
 if (OBFUSCATE) {
   console.log('🔒 Obfuscating…');
   const obfuscateOptions = {
@@ -45,8 +45,6 @@ if (OBFUSCATE) {
     const result = JavaScriptObfuscator.obfuscate(code, obfuscateOptions);
     fs.writeFileSync(filePath, result.getObfuscatedCode());
   });
-} else {
-  console.log('⏭️  Obfuscation skipped (debug build)');
 }
 
 // ── 5. Copy static files ───────────────────────────────────────────────────
@@ -54,7 +52,6 @@ console.log('📋 Copying static files…');
 fs.copyFileSync(path.join(root, 'manifest.json'), path.join(build, 'manifest.json'));
 fs.copyFileSync(path.join(root, 'src/modal/modal.html'), path.join(build, 'modal/modal.html'));
 fs.copyFileSync(path.join(root, 'src/settings/options.html'), path.join(build, 'settings/options.html'));
-fs.copyFileSync(path.join(root, 'src/calendar/calendar-relay.js'), path.join(build, 'calendar/calendar-relay.js'));
 
 // Copy all assets (styles.css + icons)
 const assetsDir = path.join(root, 'src/assets');

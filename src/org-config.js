@@ -16,7 +16,6 @@ const ENVIRONMENTS = {
     CONFLUENCE_SPACE_KEY: 'TPM',
     CUSTOM_FIELDS: {
       FINANCIAL_CATEGORY: 'customfield_10195',
-      STORY_POINTS: 'customfield_10058',
       SPRINT: 'customfield_10020',
     },
   },
@@ -24,18 +23,19 @@ const ENVIRONMENTS = {
 
 // Shared config (same across environments)
 const SHARED = {
-  STORY_POINTS_PER_HOUR: 1,
-  ISSUE_LINK_TYPE: 'Parent - Child Issue Link',
   ISSUE_TYPES: {
     TASK: 'Task',
     BUG: 'Bug',
     STORY: 'Story',
     EPIC: 'Epic',
-  }
+  },
+  OUTLOOK_CALENDAR_URL: 'https://outlook.live.com/calendar/',
+  MICROSOFT_OAUTH_CLIENT_ID: 'YOUR_AZURE_APP_CLIENT_ID',
+  MICROSOFT_OAUTH_TENANT: 'common',
 };
 
 function detectEnvironment() {
-  const currentUrl = window.location.origin;
+  const currentUrl = globalThis.location?.origin || '';
   for (const [name, config] of Object.entries(ENVIRONMENTS)) {
     if (currentUrl.startsWith(config.JIRA_BASE_URL)) return name;
   }

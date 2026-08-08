@@ -4,10 +4,12 @@
 
 import { RAIL_CSS } from './widget/rail-styles.js';
 import { RAIL_HTML } from './widget/rail-dom.js';
-import { isExtensionValid, fetchTasks, getRecentTasks, pushRecentTask } from './widget/task-service.js';
+import { isExtensionValid, fetchTasks, fetchSubtasks, getRecentTasks, pushRecentTask } from './widget/task-service.js';
 import { createTimerController } from './widget/timer-controller.js';
 import { createMeetingController } from './widget/meeting-controller.js';
 import { createLogController } from './widget/log-controller.js';
+
+const CALENDAR_INTEGRATION_ENABLED = false;
 
 (async function () {
   if (!isExtensionValid()) return;
@@ -148,7 +150,7 @@ import { createLogController } from './widget/log-controller.js';
     } else if (state === 'idle') {
       refs.meetingChip.classList.remove('compact');
       refs.activeEstimate.style.display = 'none';
-      if (flags.calendar && navigator.userAgent.includes('Edg/')) meetingCtrl.checkUpcoming();
+      if (CALENDAR_INTEGRATION_ENABLED && flags.calendar) meetingCtrl.checkUpcoming();
     } else if (state === 'stopped') {
       logCtrl.setStopData(data);
     }
@@ -299,6 +301,17 @@ import { createLogController } from './widget/log-controller.js';
       if (!recentTasks.length) refs.taskList.innerHTML = '<span class="task-row-msg">\u23f3 Loading...</span>';
       try {
         allIssues = await fetchTasks(JQL_FILTER);
+        console.log('[JTP] fetched parent issues:', allIssues.length, allIssues.map(i => i.key + '/' + (i.fields?.issuetype?.name || '?')));
+        const parentKeys = allIssues
+          .filter(i => (i.fields?.issuetype?.name || '').match(/Task|Story|Bug/))
+          .map(i => i.key);
+        console.log('[JTP] parentKeys for subtask fetch:', parentKeys);
+        if (parentKeys.length) {
+          const subtasks = await fetchSubtasks(parentKeys);
+          console.log('[JTP] fetched subtasks:', subtasks.length, subtasks.map(i => i.key));
+          const existingKeys = new Set(allIssues.map(i => i.key));
+          subtasks.forEach(st => { if (!existingKeys.has(st.key)) allIssues.push(st); });
+        }
       } catch (e) {
         if (!recentTasks.length) refs.taskList.innerHTML = `<span class="task-row-msg">\u274c ${e.message}</span>`;
         return;
@@ -326,6 +339,6 @@ import { createLogController } from './widget/log-controller.js';
   refs.rail.classList.add('hidden');
   refs.miniPill.classList.add('visible');
 
-  if (flags.calendar && navigator.userAgent.includes('Edg/')) meetingCtrl.start();
+  if (CALENDAR_INTEGRATION_ENABLED && flags.calendar) meetingCtrl.start();
   timerCtrl.checkInitialState();
 })();

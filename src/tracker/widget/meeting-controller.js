@@ -50,8 +50,7 @@ export function createMeetingController(refs, timerController) {
       lastCalFetch = now.getTime();
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
       const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString();
-      const url = `https://outlook.office.com/api/v2.0/me/calendarview?startDateTime=${startOfDay}&endDateTime=${endOfDay}&$orderby=start/dateTime&$top=20`;
-      chrome.runtime.sendMessage({ type: 'JTP_CALENDAR_FETCH', url }, (res) => {
+      chrome.runtime.sendMessage({ type: 'JTP_CALENDAR_FETCH', startDateTime: startOfDay, endDateTime: endOfDay }, (res) => {
         if (chrome.runtime.lastError) return;
         if (res?.ok) {
           cachedCalEvents = res.data.value || [];

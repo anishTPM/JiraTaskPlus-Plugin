@@ -15,9 +15,9 @@ A Chrome/Edge extension for bulk creating Jira tasks and tracking time with Temp
 - **Analytics Dashboard** — Track tasks created, time saved, and sync stats to Confluence
 - **⏱️ Unified Footer Rail** — Persistent footer bar on all pages with search-first task picker and Tempo integration
 - **Search & Recent Tasks** — Instant client-side search + last 5 used tasks shown first
+- **Automatic Subtasks** — Open subtasks for parent issues are fetched and displayed automatically in the task picker
 - **Tempo Worklog** — Stop timer, edit time & description, log directly to Tempo
-- **📅 Calendar Integration** — Outlook calendar meeting reminders with one-click task linking (Edge only)
-- **Event Filters** — Skip all-day events and keyword blocklist for calendar reminders
+- **Calendar Events** — Page retained for future work; controls are temporarily disabled in v2.2.0
 - **Cross-tab Sync** — Timer state syncs instantly across all open tabs
 
 ## Time Tracker
@@ -32,9 +32,11 @@ A unified footer rail that lives on every browser page:
 6. **Cross-tab** — Starting or stopping in any tab instantly updates all other open tabs.
 7. **Meeting Link** — Click Link on a meeting chip to open task picker; selected task starts timer with meeting title pre-filled.
 
-## Calendar Integration (Edge only)
+## Calendar Events
 
-A footer meeting reminder bar that appears automatically:
+Calendar Events is temporarily disabled in v2.2.0 while the Microsoft integration is reviewed. The settings page remains visible, but its enable checkbox and all Calendar Events controls are disabled. Calendar polling and meeting reminders do not run.
+
+Planned behavior when re-enabled:
 
 1. Polls every minute for meetings starting within **15 minutes**
 2. Shows meeting title, countdown, and ▶ **Link & Start** button
@@ -43,12 +45,7 @@ A footer meeting reminder bar that appears automatically:
 
 ### Calendar Setup
 
-1. Open Admin Panel → Calendar tab (Microsoft Edge only)
-2. Enable the calendar toggle
-3. Save → reload any tab
-4. Make sure you are logged into Outlook in Edge
-
-> **Note:** Calendar integration requires Microsoft Edge. Chrome encrypts authentication tokens in a way that makes them inaccessible to extensions.
+No setup is required in v2.2.0 because Calendar Events is temporarily disabled. OAuth configuration is retained in the source for future development only.
 
 ## Installation
 
@@ -56,7 +53,7 @@ A footer meeting reminder bar that appears automatically:
 
 - **Node.js 18+** and npm (only needed for building from source)
 - A **Jira Cloud** instance (`.atlassian.net`) you are logged into
-- (Optional) A **Tempo** API token for time tracking and a **Microsoft Edge** browser for calendar reminders
+- (Optional) A **Tempo** API token for time tracking
 
 ### Option A — From Release (Recommended)
 
@@ -110,7 +107,7 @@ Then edit `src/org-config.js` to match your Jira instance:
 1. Set `JIRA_BASE_URL` for each environment (production / staging).
 2. Update `CUSTOM_FIELDS` with your instance's field IDs (only the active fields are required).
 3. Set `CONFLUENCE_BASE_URL`, `CONFLUENCE_PAGE_ID`, `CONFLUENCE_SPACE_KEY` if you want analytics sync.
-4. Adjust `SHARED` settings (issue types, financial categories, etc.).
+4. Adjust shared issue-type and Outlook page settings if needed. Calendar OAuth values can remain as placeholders while the feature is disabled.
 
 The extension auto-detects which environment to use based on the current page URL.
 
@@ -119,7 +116,7 @@ The extension auto-detects which environment to use based on the current page UR
 ### Post-install Setup
 
 - **Tempo timer:** Right-click the extension icon → **Options** → Tracker tab → paste your Tempo API token and save. Reload any open tab afterward.
-- **Calendar reminders (Edge only):** Options → Calendar tab → enable the toggle, save, reload a tab, and make sure you are signed into Outlook in Edge.
+- **Calendar Events:** No setup is required in v2.2.0; all controls and runtime polling are disabled.
 - **Analytics:** Open Options → Analytics to view stats; opening it also syncs a row to the configured Confluence page.
 
 ### Troubleshooting
@@ -127,7 +124,7 @@ The extension auto-detects which environment to use based on the current page UR
 - **Button missing on a Jira page:** Confirm you are on an issue page (`/browse/KEY`) and that the extension is enabled; reload the tab.
 - **Build fails:** Delete `node_modules/` and `build/`, then re-run `npm install` and `npm run build`.
 - **Tempo "No token" error:** Re-enter the Tempo token in Options → Tracker and reload the tab.
-- **Calendar not working in Chrome:** Calendar integration requires Microsoft Edge (Chrome encrypts the auth tokens used by the relay).
+- **Calendar Events unavailable:** This is expected in v2.2.0 because the integration is temporarily disabled.
 
 
 ## Project Structure
@@ -136,9 +133,8 @@ The extension auto-detects which environment to use based on the current page UR
 ├── src/
 │   ├── api/jira.js          # Jira REST API client
 │   ├── assets/              # Icons and compiled CSS
-│   ├── calendar/            # Outlook calendar integration
-│   │   ├── calendar-background.js  # Token extraction + fetch proxy
-│   │   └── calendar-relay.js       # Content script bridge
+│   ├── calendar/            # Microsoft OAuth + Graph calendar integration
+│   │   └── calendar-background.js  # PKCE authentication, refresh, event fetch
 │   ├── modal/               # Bulk task creation modal UI
 │   ├── settings/            # Admin panel (Org Configs, Analytics, Tracker, Calendar)
 │   ├── tracker/             # Time tracker (feature-flagged)

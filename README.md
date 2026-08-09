@@ -47,6 +47,10 @@ Planned behavior when re-enabled:
 
 No setup is required in v2.2.0 because Calendar Events is temporarily disabled. OAuth configuration is retained in the source for future development only.
 
+## Demo 
+[![Watch the Demo-1 video](https://img.youtube.com/vi/3sLb4GAZUOI/maxresdefault.jpg)](https://youtu.be/3sLb4GAZUOI)
+
+
 ## Screenshots
 
 ### Plugin in front

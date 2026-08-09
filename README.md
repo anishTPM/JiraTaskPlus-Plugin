@@ -47,6 +47,19 @@ Planned behavior when re-enabled:
 
 No setup is required in v2.2.0 because Calendar Events is temporarily disabled. OAuth configuration is retained in the source for future development only.
 
+## Screenshots
+
+### Plugin in front
+<img width="2048" height="1800" alt="JTP Screenshot-2(2)" src="https://github.com/user-attachments/assets/5e26e306-f778-43bf-a1c3-c01cd27d4c58" />
+
+
+### Analytics - Statistics
+<img width="1872" height="866" alt="2026-08-09 12_00_41-NVIDIA GeForce Overlay DT" src="https://github.com/user-attachments/assets/de8c24c4-059b-48a4-8ea1-288ab901cc0b" />
+
+### Tracker Configurations
+<img width="2048" height="1800" alt="JTP Screenshot-2(3)" src="https://github.com/user-attachments/assets/77ef1949-02a4-4563-a52d-85c8539ec3ff" />
+
+
 ## Installation
 
 ### Prerequisites

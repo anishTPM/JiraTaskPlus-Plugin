@@ -43,11 +43,12 @@ Planned behavior when re-enabled:
 3. Clicking **Link & Start** opens an inline Jira task picker — select a task to start the timer with the meeting title pre-filled as the log description
 4. **× Dismiss** hides the reminder for that specific meeting
 
-### Calendar Setup
 
-No setup is required in v2.2.0 because Calendar Events is temporarily disabled. OAuth configuration is retained in the source for future development only.
+> [!CAUTION]
+> No setup is required in v2.2.0 because Calendar Events is temporarily disabled. OAuth configuration is retained in the source for future development only.
 
-## Demo 
+
+## Demo Video Click on this thumbnail
 [![Watch the Demo-1 video](https://img.youtube.com/vi/3sLb4GAZUOI/maxresdefault.jpg)](https://youtu.be/3sLb4GAZUOI)
 
 

@@ -36,7 +36,115 @@ export function initCalendarBackground() {
         .catch(e => sendResponse({ ok: false, error: e.message }));
       return true;
     }
+
+    if (msg.type === 'JTP_CALENDAR_SESSION_FETCH') {
+      const range = parseRange(msg.url, msg.startDateTime, msg.endDateTime);
+      fetchCalendarFromSession(msg.tabId, range.startDateTime, range.endDateTime)
+        .then(data => sendResponse({ ok: true, data }))
+        .catch(e => sendResponse({ ok: false, error: e.message }));
+      return true;
+    }
   });
+}
+
+// ── Open-tab session fetch (no Azure client ID required) ───────────────────
+// Reads the access token cached by the signed-in Outlook Web App (OWA) from
+// the user's already-open outlook.live.com tab and calls Microsoft Graph with
+// it. The token is used in-memory only and never persisted.
+
+const OUTLOOK_TAB_URLS = [
+  '*://outlook.live.com/*',
+  '*://outlook.office.com/*',
+  '*://outlook.office365.com/*',
+  '*://outlook.cloud.microsoft/*',
+];
+
+async function fetchCalendarFromSession(tabId, startDateTime, endDateTime) {
+  const accessToken = await extractOutlookAccessToken(tabId);
+  const start = startDateTime || startOfToday();
+  const end = endDateTime || endOfToday();
+  const url = new URL(GRAPH_CALENDAR_URL);
+  url.search = new URLSearchParams({
+    startDateTime: start,
+    endDateTime: end,
+    '$orderby': 'start/dateTime',
+    '$top': '50',
+    '$select': 'subject,start,end,isAllDay,webLink,organizer',
+  }).toString();
+
+  const response = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+      Prefer: 'outlook.timezone="UTC"',
+    },
+  });
+  if (response.status === 401) {
+    throw new Error('Outlook session expired. Reload the Outlook tab (F5) after signing in, then try again.');
+  }
+  if (!response.ok) throw new Error(`Microsoft Graph ${response.status}: ${(await response.text()).slice(0, 300)}`);
+  return response.json();
+}
+
+function findOutlookTab() {
+  return new Promise(resolve => {
+    chrome.tabs.query({ url: OUTLOOK_TAB_URLS }, tabs => {
+      resolve(chrome.runtime.lastError ? [] : (tabs || []));
+    });
+  });
+}
+
+async function extractOutlookAccessToken(tabId) {
+  if (tabId == null) {
+    const tabs = await findOutlookTab();
+    if (!tabs.length) {
+      throw new Error('No open Outlook tab. Open https://outlook.live.com/calendar and sign in, then try again.');
+    }
+    tabId = tabs[0].id;
+  }
+  const results = await chrome.scripting.executeScript({
+    target: { tabId },
+    world: 'MAIN',
+    func: extractMsalTokenFromStorage,
+  });
+  const token = results?.[0]?.result;
+  if (!token) {
+    throw new Error('Could not find an Outlook sign-in session. Reload the Outlook tab (F5) after signing in, then try again.');
+  }
+  return token;
+}
+
+function extractMsalTokenFromStorage() {
+  const now = Math.floor(Date.now() / 1000);
+  const candidates = [];
+  for (const storage of [window.localStorage, window.sessionStorage]) {
+    for (let i = 0; i < storage.length; i++) {
+      const key = storage.key(i);
+      if (!key || key.indexOf('msal.') !== 0) continue;
+      let entry;
+      try { entry = JSON.parse(storage.getItem(key)); } catch (_) { continue; }
+      if (!entry || typeof entry !== 'object' || !entry.secret) continue;
+      const isAccessToken = entry.credentialType === 'AccessToken' || key.indexOf('.accesstoken.') !== -1;
+      if (!isAccessToken) continue;
+      candidates.push({
+        secret: entry.secret,
+        expiresOn: entry.expiresOn,
+        target: String(entry.target || '').toLowerCase(),
+      });
+    }
+  }
+  const graphTokens = candidates.filter(c =>
+    c.target.includes('graph.microsoft.com') || c.target.includes('calendars.read')
+  );
+  const pool = graphTokens.length ? graphTokens : candidates;
+  const valid = pool.filter(c => {
+    const exp = typeof c.expiresOn === 'number'
+      ? c.expiresOn
+      : Math.floor(Date.parse(c.expiresOn) / 1000);
+    return !Number.isNaN(exp) && exp > now + 60;
+  });
+  const chosen = (valid.length ? valid : pool)[0];
+  return chosen ? chosen.secret : null;
 }
 
 function parseRange(url, startDateTime, endDateTime) {

@@ -1,4 +1,5 @@
 import ORG_CONFIG from '../org-config.js';
+import { todayRange, normalizeGraphEvents, buildEventRows } from '../calendar/calendar-utils.js';
 
 // ── Theme ────────────────────────────────────────────────────────────────────
 function applyTheme(dark) {
@@ -25,6 +26,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
     if (item.dataset.page === 'analytics') loadAnalytics();
     if (item.dataset.page === 'tracker') loadTrackerSettings();
     if (item.dataset.page === 'calendar') loadCalendarSettings();
+    if (item.dataset.page === 'personal-calendar') loadPersonalCalendar();
   });
 });
 
@@ -468,4 +470,73 @@ document.getElementById('test-calendar').addEventListener('click', async () => {
     statusEl.textContent = `❌ ${e.message}`;
     statusEl.style.color = '#991b2b';
   }
+});
+
+// ── My Personal Calendar ───────────────────────────────────────────────────
+function loadPersonalCalendar() {
+  chrome.storage.local.get('jtp-calendar-cache', (res) => {
+    const cache = res['jtp-calendar-cache'];
+    const statusEl = document.getElementById('personal-fetch-status');
+    const bodyEl = document.getElementById('personal-events-body');
+    if (cache?.events?.length) {
+      const fetchedAt = cache.fetchedAt
+        ? ` (cached @ ${new Date(cache.fetchedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`
+        : '';
+      renderPersonalEvents(cache.events, bodyEl);
+      statusEl.textContent = `Cached ${cache.events.length} event(s)${fetchedAt}`;
+      statusEl.style.color = '#64748b';
+    }
+  });
+}
+
+function statusBadge(status) {
+  const color = status === 'Now' ? '#16a34a' : status === 'Done' ? '#64748b' : '#1d4ed8';
+  return `<span style="color:${color}; font-weight:600;">${status}</span>`;
+}
+
+function renderPersonalEvents(events, bodyEl) {
+  const rows = buildEventRows(events);
+  if (!rows.length) {
+    bodyEl.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#9ca3af; padding:16px;">No events found</td></tr>';
+    return;
+  }
+  bodyEl.innerHTML = rows.map(r => {
+    const dur = r.durMin != null ? `${r.durMin}m` : '—';
+    return `<tr><td>${r.timeStr}</td><td>${escHtml(r.subject)}</td><td>${dur}</td><td>${statusBadge(r.status)}</td></tr>`;
+  }).join('');
+}
+
+document.getElementById('fetch-outlook').addEventListener('click', async () => {
+  const statusEl = document.getElementById('personal-fetch-status');
+  const bodyEl = document.getElementById('personal-events-body');
+  statusEl.textContent = "⏳ Fetching today's events from Outlook...";
+  statusEl.style.color = '#1e40af';
+  try {
+    const { startDateTime, endDateTime } = todayRange();
+    const res = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ type: 'JTP_CALENDAR_SESSION_FETCH', startDateTime, endDateTime }, (r) => {
+        if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
+        else if (!r || !r.ok) reject(new Error(r?.error || 'Fetch failed'));
+        else resolve(r);
+      });
+    });
+    const events = normalizeGraphEvents(res.data);
+    chrome.storage.local.set({ 'jtp-calendar-cache': { events, fetchedAt: new Date().toISOString() } });
+    renderPersonalEvents(events, bodyEl);
+    statusEl.textContent = `✅ ${events.length} event(s) loaded`;
+    statusEl.style.color = '#166534';
+  } catch (e) {
+    statusEl.textContent = `❌ ${e.message}`;
+    statusEl.style.color = '#991b2b';
+  }
+});
+
+document.getElementById('fetch-google').addEventListener('click', () => {
+  const statusEl = document.getElementById('personal-fetch-status');
+  statusEl.textContent = '🚧 Google Calendar support is coming soon.';
+  statusEl.style.color = '#92400e';
+});
+
+document.getElementById('personal-open-outlook').addEventListener('click', () => {
+  chrome.tabs.create({ url: ORG_CONFIG.OUTLOOK_CALENDAR_URL, active: true });
 });

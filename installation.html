@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#070a1a" />
-  <title>Installation — Jira Task Plus v2.2.0</title>
+  <title>Installation — Jira Task Plus v2.3.0</title>
   <style>
     :root {
       --bg: #070a1a;
@@ -138,7 +138,7 @@
 
   <main id="top" class="wrap">
     <section class="hero">
-      <div class="eyebrow"><span class="pulse"></span> v2.2.0 · Chrome/Edge Extension</div>
+      <div class="eyebrow"><span class="pulse"></span> v2.3.0 · Chrome/Edge Extension</div>
       <h1>Install Jira Task Plus</h1>
       <p class="lead">Two ways to get started — load the prebuilt release in seconds, or build from source for full org configuration.</p>
     </section>
@@ -152,7 +152,7 @@
         <div class="mini"><h4>Runtime</h4><p>A Jira Cloud instance (<code class="inline">*.atlassian.net</code>) you are signed into, and a Chromium browser (Chrome or Edge).</p></div>
         <div class="mini"><h4>Build from source</h4><p>Node.js 18+ and npm. Only needed if you choose Option B below.</p></div>
         <div class="mini"><h4>Tempo (optional)</h4><p>A Tempo API token to log worklogs from the footer timer.</p></div>
-        <div class="mini"><h4>Calendar Events</h4><p>The page is included but temporarily disabled in v2.2.0.</p></div>
+        <div class="mini"><h4>My Personal Calendar</h4><p>No Azure setup needed — sign in to Outlook in a tab and fetch today's events from Options → My Personal Calendar.</p></div>
       </div>
     </section>
 
@@ -211,7 +211,7 @@ npm run build
           <li>Set <code class="inline">JIRA_BASE_URL</code> for each environment (production / staging).</li>
           <li>Update <code class="inline">CUSTOM_FIELDS</code> with your instance's active field IDs.</li>
           <li>Set <code class="inline">CONFLUENCE_BASE_URL</code>, <code class="inline">CONFLUENCE_PAGE_ID</code>, <code class="inline">CONFLUENCE_SPACE_KEY</code> for analytics sync.</li>
-          <li>Calendar OAuth values may remain as placeholders while Calendar Events is disabled in v2.2.0.</li>
+          <li>Calendar OAuth values may remain as placeholders — they are not needed for the My Personal Calendar tab.</li>
         </ol>
         <p style="color:var(--muted);">The extension auto-detects the environment from the current page URL.</p>
         <div class="note"><strong>Never commit <code class="inline">src/org-config.js</code></strong> — it can contain tenant URLs and field IDs. Keep <code class="inline">src/org-config-template.js</code> as the shared reference.</div>
@@ -225,7 +225,7 @@ npm run build
       </div>
       <div class="grid2">
         <div class="mini"><h4>Tempo timer</h4><p>Right-click the icon → <b>Options</b> → Tracker tab → paste your Tempo token, save, then reload any tab.</p></div>
-        <div class="mini"><h4>Calendar Events</h4><p>No setup is required in v2.2.0; the page is visible but all controls are disabled.</p></div>
+        <div class="mini"><h4>My Personal Calendar</h4><p>Sign in to Outlook in a tab, then open Options → My Personal Calendar and click <b>Fetch Today's Events from Outlook</b>.</p></div>
         <div class="mini"><h4>Analytics</h4><p>Open Options → Analytics to view stats. Opening it also syncs a row to the configured Confluence page.</p></div>
         <div class="mini"><h4>Bulk create</h4><p>Open a Story or Epic in Jira and click <b>Bulk Add</b> in the header.</p></div>
       </div>
@@ -241,13 +241,14 @@ npm run build
           <li><b>Button missing on a Jira page:</b> confirm you are on an issue page (<code class="inline">/browse/KEY</code>) and the extension is enabled; reload the tab.</li>
           <li><b>Build fails:</b> delete <code class="inline">node_modules/</code> and <code class="inline">build/</code>, then re-run <code class="inline">npm install</code> and <code class="inline">npm run build</code>.</li>
           <li><b>Tempo "No token" error:</b> re-enter the Tempo token in Options → Tracker and reload the tab.</li>
-          <li><b>Calendar controls disabled:</b> this is expected in v2.2.0 while the integration is under review.</li>
+          <li><b>Calendar controls disabled:</b> this is expected for the separate Calendar Events page, which remains under review in v2.3.0.</li>
+          <li><b>My Personal Calendar shows no events:</b> sign in to Outlook in an open tab (<code class="inline">outlook.live.com</code>), reload that tab (F5), then click <b>Fetch Today's Events from Outlook</b> again.</li>
         </ul>
       </div>
     </section>
 
     <footer class="footer">
-       <b>Jira Task Plus v2.2.0</b> · Chrome/Edge Extension · MIT License
+       <b>Jira Task Plus v2.3.0</b> · Chrome/Edge Extension · MIT License
     </footer>
   </main>
 </body>

@@ -1,11 +1,12 @@
 {
   "manifest_version": 3,
   "name": "Jira Task Plus",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Bulk create Jira tasks from Story and Epic pages.",
   "permissions": [
     "activeTab",
     "identity",
+    "scripting",
     "storage",
     "tabs",
     "contextMenus",

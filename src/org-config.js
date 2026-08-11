@@ -29,9 +29,12 @@ const SHARED = {
     STORY: 'Story',
     EPIC: 'Epic',
   },
-  OUTLOOK_CALENDAR_URL: 'https://outlook.live.com/calendar/',
+  OUTLOOK_CALENDAR_URL: 'https://outlook.live.com/calendar/view/workweek',
   MICROSOFT_OAUTH_CLIENT_ID: 'YOUR_AZURE_APP_CLIENT_ID',
   MICROSOFT_OAUTH_TENANT: 'common',
+  // Reserved for the future "Fetch today's events from Google" button.
+  // GOOGLE_CALENDAR_URL: '',
+  // GOOGLE_OAUTH_CLIENT_ID: '',
 };
 
 function detectEnvironment() {

@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.3.0] - 2026-08-11
+
+### Added
+- **My Personal Calendar tab** — new Options page with a "Fetch Today's Events from Outlook" button and a disabled "Fetch Today's Events from Google" button (coming soon)
+- **Open-tab session fetching** — the Outlook button reads the access token cached by the signed-in Outlook Web App from an already-open `outlook.live.com` tab and calls Microsoft Graph `/me/calendarView`; no Azure client ID required. The token is held in-memory only and never persisted
+- Shared calendar utilities (`calendar-utils.js`) with unit tests
+
+### Changed
+- `OUTLOOK_CALENDAR_URL` now points to the Outlook workweek view (`outlook.live.com/calendar/view/workweek`)
+- Added `scripting` permission for MAIN-world token extraction
+
 ## [2.2.0] - 2026-08-08
 
 ### Added

@@ -17,7 +17,8 @@ A Chrome/Edge extension for bulk creating Jira tasks and tracking time with Temp
 - **Search & Recent Tasks** — Instant client-side search + last 5 used tasks shown first
 - **Automatic Subtasks** — Open subtasks for parent issues are fetched and displayed automatically in the task picker
 - **Tempo Worklog** — Stop timer, edit time & description, log directly to Tempo
-- **Calendar Events** — Page retained for future work; controls are temporarily disabled in v2.2.0
+- **Calendar Events** — Page retained for future work; controls are temporarily disabled in v2.3.0
+- **My Personal Calendar** — Fetch today's events from your already-open Outlook tab (no Azure setup needed); Google button coming soon
 - **Cross-tab Sync** — Timer state syncs instantly across all open tabs
 
 ## Time Tracker
@@ -34,7 +35,7 @@ A unified footer rail that lives on every browser page:
 
 ## Calendar Events
 
-Calendar Events is temporarily disabled in v2.2.0 while the Microsoft integration is reviewed. The settings page remains visible, but its enable checkbox and all Calendar Events controls are disabled. Calendar polling and meeting reminders do not run.
+Calendar Events is temporarily disabled in v2.3.0 while the Microsoft integration is reviewed. The settings page remains visible, but its enable checkbox and all Calendar Events controls are disabled. Calendar polling and meeting reminders do not run.
 
 Planned behavior when re-enabled:
 
@@ -45,7 +46,19 @@ Planned behavior when re-enabled:
 
 
 > [!CAUTION]
-> No setup is required in v2.2.0 because Calendar Events is temporarily disabled. OAuth configuration is retained in the source for future development only.
+> No setup is required in v2.3.0 because Calendar Events is temporarily disabled. OAuth configuration is retained in the source for future development only.
+
+## My Personal Calendar
+
+A separate **Options → My Personal Calendar** tab that lists today's events without any Azure registration:
+
+1. Sign in to Outlook at `outlook.live.com/calendar` in a browser tab.
+2. Open the extension Options (right-click the plugin icon) → **My Personal Calendar**.
+3. Click **📅 Fetch Today's Events from Outlook**. The extension reads the sign-in session from the open Outlook tab and loads today's events via Microsoft Graph.
+4. If events are missing or stale, reload the Outlook tab (F5) to renew the session and click Fetch again.
+5. The **📅 Fetch Today's Events from Google** button is disabled for now and will be enabled in a future release.
+
+> The Outlook access token is used in-memory only for this fetch and is never saved by the extension.
 
 
 ## Demo Video Click on this thumbnail
@@ -134,7 +147,8 @@ The extension auto-detects which environment to use based on the current page UR
 ### Post-install Setup
 
 - **Tempo timer:** Right-click the extension icon → **Options** → Tracker tab → paste your Tempo API token and save. Reload any open tab afterward.
-- **Calendar Events:** No setup is required in v2.2.0; all controls and runtime polling are disabled.
+- **Calendar Events:** No setup is required in v2.3.0; all controls and runtime polling are disabled.
+- **My Personal Calendar:** Sign in to Outlook in a tab, then open Options → My Personal Calendar and click **Fetch Today's Events from Outlook**. No Azure setup needed.
 - **Analytics:** Open Options → Analytics to view stats; opening it also syncs a row to the configured Confluence page.
 
 ### Troubleshooting
@@ -142,7 +156,8 @@ The extension auto-detects which environment to use based on the current page UR
 - **Button missing on a Jira page:** Confirm you are on an issue page (`/browse/KEY`) and that the extension is enabled; reload the tab.
 - **Build fails:** Delete `node_modules/` and `build/`, then re-run `npm install` and `npm run build`.
 - **Tempo "No token" error:** Re-enter the Tempo token in Options → Tracker and reload the tab.
-- **Calendar Events unavailable:** This is expected in v2.2.0 because the integration is temporarily disabled.
+- **Calendar Events unavailable:** This is expected in v2.3.0 because the integration is temporarily disabled.
+- **My Personal Calendar shows no events:** Make sure you are signed in to Outlook in an open tab (outlook.live.com), then reload that tab (F5) and click **Fetch Today's Events from Outlook** again.
 
 
 ## Project Structure
@@ -151,8 +166,9 @@ The extension auto-detects which environment to use based on the current page UR
 ├── src/
 │   ├── api/jira.js          # Jira REST API client
 │   ├── assets/              # Icons and compiled CSS
-│   ├── calendar/            # Microsoft OAuth + Graph calendar integration
-│   │   └── calendar-background.js  # PKCE authentication, refresh, event fetch
+│   ├── calendar/            # Calendar integration (Microsoft Graph + open-tab session)
+│   │   ├── calendar-background.js  # Session token extraction, event fetch
+│   │   └── calendar-utils.js       # Pure helpers (date range, event normalization)
 │   ├── modal/               # Bulk task creation modal UI
 │   ├── settings/            # Admin panel (Org Configs, Analytics, Tracker, Calendar)
 │   ├── tracker/             # Time tracker (feature-flagged)
@@ -204,6 +220,7 @@ Watches for file changes and rebuilds automatically (without obfuscation).
 | Permission | Reason |
 |---|---|
 | `activeTab` | Read Jira page content |
+| `scripting` | Read the Outlook sign-in session from an open Outlook tab (My Personal Calendar) |
 | `storage` | Save settings, timer state, and board preferences |
 | `tabs` | Open settings page |
 | `contextMenus` | Right-click menu options |

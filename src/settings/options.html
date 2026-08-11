@@ -89,10 +89,13 @@
         <div class="nav-item" data-page="calendar">
           <span class="icon">📅</span> Calendar Events
         </div>
+        <div class="nav-item" data-page="personal-calendar">
+          <span class="icon">🗓️</span> My Personal Calendar
+        </div>
       </nav>
       <div class="sidebar-footer">
         <button id="theme-toggle" style="background:rgba(255,255,255,0.08); border:1px solid #334155; border-radius:8px; color:#94a3b8; font-size:12px; font-weight:600; cursor:pointer; padding:7px 14px; width:100%; margin-bottom:8px; transition:all 0.15s;">🌙 Dark Mode</button>
-        v2.2.0 · Jira Task Plus by Anish
+        v2.3.0 · Jira Task Plus by Anish
       </div>
     </aside>
 
@@ -387,6 +390,36 @@
 
             <button id="save-calendar" style="background:#cbd5e1; color:#64748b; border:none; border-radius:8px; padding:10px 24px; font-size:13px; font-weight:600; cursor:not-allowed; margin-top:8px;" disabled>💾 Save Calendar Settings</button>
             <span id="calendar-save-status" style="margin-left:12px; font-size:12px; color:#16a34a;"></span>
+          </div>
+        </div>
+      </div>
+      <!-- My Personal Calendar Page -->
+      <div id="page-personal-calendar" class="page">
+        <div class="page-header">
+          <h2>🗓️ My Personal Calendar</h2>
+          <p>Fetch today's events using your already-open Outlook tab. No Azure sign-in required.</p>
+        </div>
+        <div class="page-body">
+          <div class="config-card">
+            <h3>📅 Today's Events</h3>
+            <p style="font-size:12px; color:#64748b; margin-bottom:10px;">
+              Sign in to Outlook at <code>outlook.live.com/calendar</code> in a tab, then click
+              <b>Fetch Today's Events from Outlook</b>. If events are missing or stale, reload the Outlook tab (F5) and try again.
+            </p>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+              <button id="fetch-outlook" style="background:linear-gradient(135deg,#0f6cbd,#0b5cad); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:13px; font-weight:600; cursor:pointer;">📅 Fetch Today's Events from Outlook</button>
+              <button id="fetch-google" style="background:#cbd5e1; color:#64748b; border:none; border-radius:8px; padding:10px 20px; font-size:13px; font-weight:600; cursor:not-allowed;" disabled title="Coming soon">📅 Fetch Today's Events from Google</button>
+              <button id="personal-open-outlook" style="background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; border-radius:8px; padding:10px 16px; font-size:12px; font-weight:600; cursor:pointer;">🌐 Open Outlook</button>
+              <span id="personal-fetch-status" style="font-size:12px; color:#64748b;"></span>
+            </div>
+            <div id="personal-calendar-results">
+              <table class="breakdown-table">
+                <thead>
+                  <tr><th>Time</th><th>Title</th><th>Duration</th><th>Status</th></tr>
+                </thead>
+                <tbody id="personal-events-body"><tr><td colspan="4" style="text-align:center; color:#9ca3af; padding:16px;">Click Fetch Today's Events from Outlook</td></tr></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
